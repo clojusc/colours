@@ -1,4 +1,4 @@
-(ns clojusc.colours.attributes)
+(ns clojusc.colours.attr)
 
 ;; Base formatting attributes
 (def ^:const reset 0)

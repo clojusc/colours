@@ -1,28 +1,13 @@
 (ns clojusc.colours.core
   "Main public API for the Clojure colour library"
-  (:require [clojusc.colours.attributes :as attr]
+  (:require [clojusc.colours.attr :as attr]
             [clojusc.colours.colour :as colour]
             [clojusc.colours.rgb :as rgb]
             [clojusc.colours.print :as print]
             [clojusc.colours.ansi :as ansi])
   (:import [clojusc.colours.colour Colour]
-           [clojusc.colours.rgb RGBcolour]))
-
-;; Re-export commonly used attributes
-(def bold attr/bold)
-(def italic attr/italic)
-(def underline attr/underline)
-(def fg-red attr/fg-red)
-(def fg-green attr/fg-green)
-(def fg-blue attr/fg-blue)
-(def fg-yellow attr/fg-yellow)
-(def fg-cyan attr/fg-cyan)
-(def fg-magenta attr/fg-magenta)
-(def fg-black attr/fg-black)
-(def fg-white attr/fg-white)
-(def bg-red attr/bg-red)
-(def bg-green attr/bg-green)
-(def bg-blue attr/bg-blue)
+           [clojusc.colours.rgb RGBColour])
+  (:refer-clojure :exclude [print, println]))
 
 ;; Colour creation
 (defn colour
@@ -33,33 +18,33 @@
 (defn rgb
   "Create RGB foreground colour"
   [r g b]
-  (rgb/rgb-colour r g b))
+  (rgb/fg-colour r g b))
 
 (defn rgb-bg
   "Create RGB background colour"
   [r g b]
-  (rgb/rgb-bg-colour r g b))
+  (rgb/bg-colour r g b))
 
 ;; Colour manipulation
 (defn add
   "Add attributes to a colour"
   [colour & attributes]
-  (apply colour/add-attributes colour attributes))
+  (apply colour/add-attrs colour attributes))
 
 (defn combine
   "Combine two colours"
   [colour1 colour2]
-  (colour/colour-operation :combine colour1 colour2))
+  (colour/op :combine colour1 colour2))
 
 (defn enable-colour
   "Enable colour output for a colour"
   [colour]
-  (colour/colour-operation :enable colour))
+  (colour/op :enable colour))
 
 (defn disable-colour
   "Disable colour output for a colour"
   [colour]
-  (colour/colour-operation :disable colour))
+  (colour/op :disable colour))
 
 ;; String operations
 (defn colourize
@@ -67,18 +52,18 @@
   [colour text]
   (ansi/colourize colour text))
 
-(defn strip-colours
+(defn strip
   "Remove ANSI colour codes from text"
   [text]
-  (ansi/strip-colours (colour/create-colour []) text))
+  (ansi/strip (colour/create-colour []) text))
 
 ;; Printing functions
-(defn print-colour
+(defn print
   "Print coloured text"
   [colour text]
   (print/print-with-colour colour text))
 
-(defn println-colour
+(defn println
   "Print coloured text with newline"
   [colour text]
   (print/println-with-colour colour text))

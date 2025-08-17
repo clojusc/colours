@@ -26,8 +26,8 @@
   (testing "Reset sequence detection"
     (let [reset-colour (colour/create-colour [attr/reset])
           regular-colour (colour/create-colour [attr/fg-red])]
-      (is (ansi/reset-sequence? reset-colour))
-      (is (not (ansi/reset-sequence? regular-colour))))))
+      (is (ansi/is-reset? reset-colour))
+      (is (not (ansi/is-reset? regular-colour))))))
 
 (deftest test-colourable
   (testing "Colourize text"
@@ -41,50 +41,50 @@
   (testing "Strip colours"
     (let [c (colour/create-colour [])
           coloured-text "\u001b[31mtest\u001b[0m"]
-      (is (= "test" (ansi/strip-colours c coloured-text))))))
+      (is (= "test" (ansi/strip c coloured-text))))))
 
-(deftest test-add-attributes
+(deftest test-add-attrs
   (testing "Adding single attribute"
     (let [red (colour/create-colour [attr/fg-red])
-          red-bold (colour/add-attributes red attr/bold)]
+          red-bold (colour/add-attrs red attr/bold)]
       (is (= [31 1] (:attributes red-bold)))))
   
   (testing "Adding multiple attributes"
     (let [red (colour/create-colour [attr/fg-red])
-          styled (colour/add-attributes red attr/bold attr/underline)]
+          styled (colour/add-attrs red attr/bold attr/underline)]
       (is (= [31 1 4] (:attributes styled))))))
 
-(deftest test-colour-operations
+(deftest test-ops
   (testing "Combine operation"
     (let [red (colour/create-colour [attr/fg-red])
           bold (colour/create-colour [attr/bold])
-          combined (colour/colour-operation :combine red bold)]
+          combined (colour/op :combine red bold)]
       (is (= [31 1] (:attributes combined)))))
   
   (testing "Enable operation"
     (let [disabled (colour/create-colour [attr/fg-red] true)
-          enabled (colour/colour-operation :enable disabled)]
+          enabled (colour/op :enable disabled)]
       (is (false? (:no-colour? enabled)))))
   
   (testing "Disable operation"
     (let [enabled (colour/create-colour [attr/fg-red])
-          disabled (colour/colour-operation :disable enabled)]
+          disabled (colour/op :disable enabled)]
       (is (true? (:no-colour? disabled)))))
   
   (testing "Has foreground check"
     (let [fg-colour (colour/create-colour [attr/fg-red])
           format-colour (colour/create-colour [attr/bold])]
-      (is (colour/colour-operation :has-foreground? fg-colour))
-      (is (not (colour/colour-operation :has-foreground? format-colour)))))
+      (is (colour/op :has-foreground? fg-colour))
+      (is (not (colour/op :has-foreground? format-colour)))))
   
   (testing "Has background check"
     (let [bg-colour (colour/create-colour [attr/bg-red])
           fg-colour (colour/create-colour [attr/fg-red])]
-      (is (colour/colour-operation :has-background? bg-colour))
-      (is (not (colour/colour-operation :has-background? fg-colour)))))
+      (is (colour/op :has-background? bg-colour))
+      (is (not (colour/op :has-background? fg-colour)))))
   
   (testing "Has formatting check"
     (let [formatted (colour/create-colour [attr/bold])
           plain (colour/create-colour [attr/fg-red])]
-      (is (colour/colour-operation :has-formatting? formatted))
-      (is (not (colour/colour-operation :has-formatting? plain))))))
+      (is (colour/op :has-formatting? formatted))
+      (is (not (colour/op :has-formatting? plain))))))

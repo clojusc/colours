@@ -10,15 +10,15 @@
   "Default output writer for coloured text"
   *out*)
 
-(defn- should-disable-colour? [colourable]
+(defn- disable? [colourable]
   (or *no-colour*
       (and (satisfies? ansi/colourable colourable)
            (get colourable :no-colour?))))
 
-(defn print-coloured
+(defn printed
   "Print coloured text to writer"
   [colour writer text]
-  (if (should-disable-colour? colour)
+  (if (disable? colour)
     (.write writer text)
     (.write writer (ansi/colourize colour text))))
 
@@ -26,7 +26,7 @@
   "Format and colourize text"
   [colour format-str & args]
   (let [formatted (apply format format-str args)]
-    (if (should-disable-colour? colour)
+    (if (disable? colour)
       formatted
       (ansi/colourize colour formatted))))
 
@@ -36,7 +36,7 @@
   ([colour text]
    (print-with-colour colour *output-writer* text))
   ([colour writer text]
-   (print-coloured colour writer text)
+   (printed colour writer text)
    (.flush writer)))
 
 (defn println-with-colour
@@ -44,7 +44,7 @@
   ([colour text]
    (println-with-colour colour *output-writer* text))
   ([colour writer text]
-   (print-coloured colour writer (str text \newline))
+   (printed colour writer (str text \newline))
    (.flush writer)))
 
 (defn printf-with-colour

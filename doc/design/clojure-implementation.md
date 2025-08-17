@@ -135,23 +135,23 @@ colours/
 (defprotocol ANSIFormattable
   "Protocol for objects that can be formatted with ANSI escape codes"
   (format-sequence [this] "Generate ANSI escape sequence")
-  (reset-sequence? [this] "Check if this represents a reset"))
+  (is-reset? [this] "Check if this represents a reset"))
 
 (defprotocol colourable
   "Protocol for applying colours to text"
   (colourize [this text] "Apply colour formatting to text")
-  (strip-colours [this text] "Remove colour formatting from text"))
+  (strip [this text] "Remove colour formatting from text"))
 
 (defn- join-codes [codes]
   (str/join ";" (map str codes)))
 
-(defn make-escape-sequence [codes]
+(defn seq [codes]
   (str escape-sequence (join-codes codes) "m"))
 
-(defn rgb-foreground-code [r g b]
+(defn rgb-fg-code [r g b]
   (format "38;2;%d;%d;%d" r g b))
 
-(defn rgb-background-code [r g b]
+(defn rgb-bg-code [r g b]
   (format "48;2;%d;%d;%d" r g b))
 ```
 
@@ -167,9 +167,9 @@ colours/
   ansi/ANSIFormattable
   (format-sequence [this]
     (when (and (seq attributes) (not no-colour?))
-      (ansi/make-escape-sequence attributes)))
+      (ansi/seq attributes)))
   
-  (reset-sequence? [this]
+  (is-reset? [this]
     (= attributes [attr/reset]))
   
   ansi/colourable
@@ -178,7 +178,7 @@ colours/
       text
       (str (ansi/format-sequence this) text ansi/reset-sequence)))
   
-  (strip-colours [this text]
+  (strip [this text]
     (str/replace text #"\u001b\[[0-9;]*m" "")))
 
 ;; Constructor functions
@@ -188,39 +188,39 @@ colours/
   ([attributes no-colour?]
    (->colour (vec attributes) no-colour?)))
 
-(defn add-attributes
+(defn add-attrs
   "Add attributes to an existing colour"
   [colour & attributes]
   (update colour :attributes #(vec (concat % attributes))))
 
 ;; Multi-method for colour operations
-(defmulti colour-operation 
+(defmulti op 
   "Multi-method for different colour operations"
   (fn [op & _] op))
 
-(defmethod colour-operation :combine
+(defmethod op :combine
   [_ colour1 colour2]
   (create-colour 
     (concat (:attributes colour1) (:attributes colour2))
     (or (:no-colour? colour1) (:no-colour? colour2))))
 
-(defmethod colour-operation :enable
+(defmethod op :enable
   [_ colour]
   (assoc colour :no-colour? false))
 
-(defmethod colour-operation :disable
+(defmethod op :disable
   [_ colour]
   (assoc colour :no-colour? true))
 
-(defmethod colour-operation :has-foreground?
+(defmethod op :has-foreground?
   [_ colour]
   (some attr/fg-colour-attributes (:attributes colour)))
 
-(defmethod colour-operation :has-background?
+(defmethod op :has-background?
   [_ colour]
   (some attr/bg-colour-attributes (:attributes colour)))
 
-(defmethod colour-operation :has-formatting?
+(defmethod op :has-formatting?
   [_ colour]
   (some attr/format-attributes (:attributes colour)))
 ```
@@ -232,15 +232,15 @@ colours/
   (:require [clojusc.colours.colour :as colour]
             [clojusc.colours.ansi :as ansi]))
 
-(defrecord RGBcolour [r g b background? no-colour?]
+(defrecord RGBColour [r g b background? no-colour?]
   ansi/ANSIFormattable
   (format-sequence [this]
     (when (not no-colour?)
       (if background?
-        (ansi/make-escape-sequence [(ansi/rgb-background-code r g b)])
-        (ansi/make-escape-sequence [(ansi/rgb-foreground-code r g b)]))))
+        (ansi/seq [(ansi/rgb-bg-code r g b)])
+        (ansi/seq [(ansi/rgb-fg-code r g b)]))))
   
-  (reset-sequence? [this] false)
+  (is-reset? [this] false)
   
   ansi/colourable
   (colourize [this text]
@@ -248,7 +248,7 @@ colours/
       text
       (str (ansi/format-sequence this) text ansi/reset-sequence)))
   
-  (strip-colours [this text]
+  (strip [this text]
     (str/replace text #"\u001b\[[0-9;]*m" "")))
 
 (defn rgb-colour
@@ -258,7 +258,7 @@ colours/
    {:pre [(and (>= r 0) (<= r 255))
           (and (>= g 0) (<= g 255))
           (and (>= b 0) (<= b 255))]}
-   (->RGBcolour r g b false no-colour?)))
+   (->RGBColour r g b false no-colour?)))
 
 (defn rgb-bg-colour
   "Create an RGB background colour"
@@ -267,17 +267,17 @@ colours/
    {:pre [(and (>= r 0) (<= r 255))
           (and (>= g 0) (<= g 255))
           (and (>= b 0) (<= b 255))]}
-   (->RGBcolour r g b true no-colour?)))
+   (->RGBColour r g b true no-colour?)))
 
 (defn add-rgb
   "Add RGB foreground colour to existing colour"
   [colour r g b]
-  (colour/colour-operation :combine colour (rgb-colour r g b)))
+  (colour/op :combine colour (rgb-colour r g b)))
 
 (defn add-rgb-bg
   "Add RGB background colour to existing colour"
   [colour r g b]
-  (colour/colour-operation :combine colour (rgb-bg-colour r g b)))
+  (colour/op :combine colour (rgb-bg-colour r g b)))
 ```
 
 #### 5. Print Functions (print.clj)
@@ -297,24 +297,24 @@ colours/
 
 (defprotocol ColourPrinter
   "Protocol for colour printing operations"
-  (print-coloured [this writer text] "Print coloured text to writer")
+  (printed [this writer text] "Print coloured text to writer")
   (format-coloured [this format-str & args] "Format and colourize text"))
 
-(defn- should-disable-colour? [colourable]
+(defn- disable? [colourable]
   (or *no-colour* 
       (and (satisfies? ansi/colourable colourable)
            (get colourable :no-colour?))))
 
 (extend-protocol ColourPrinter
   Object
-  (print-coloured [colour writer text]
-    (if (should-disable-colour? colour)
+  (printed [colour writer text]
+    (if (disable? colour)
       (.write writer text)
       (.write writer (ansi/colourize colour text))))
   
   (format-coloured [colour format-str & args]
     (let [formatted (apply format format-str args)]
-      (if (should-disable-colour? colour)
+      (if (disable? colour)
         formatted
         (ansi/colourize colour formatted)))))
 
@@ -324,7 +324,7 @@ colours/
   ([colour text]
    (print-with-colour colour *output-writer* text))
   ([colour writer text]
-   (print-coloured colour writer text)
+   (printed colour writer text)
    (.flush writer)))
 
 (defn println-with-colour
@@ -332,7 +332,7 @@ colours/
   ([colour text]
    (println-with-colour colour *output-writer* text))
   ([colour writer text]
-   (print-coloured colour writer (str text \newline))
+   (printed colour writer (str text \newline))
    (.flush writer)))
 
 (defn printf-with-colour
@@ -379,7 +379,7 @@ colours/
             [clojusc.colours.print :as print]
             [clojusc.colours.ansi :as ansi])
   (:import [clj_colour.colour colour]
-           [clj_colour.rgb RGBcolour]))
+           [clj_colour.rgb RGBColour]))
 
 ;; Re-export commonly used attributes
 (def bold attr/bold)
@@ -406,33 +406,33 @@ colours/
 (defn rgb
   "Create RGB foreground colour"
   [r g b]
-  (rgb/rgb-colour r g b))
+  (rgb/fg-colour r g b))
 
 (defn rgb-bg
   "Create RGB background colour"
   [r g b]
-  (rgb/rgb-bg-colour r g b))
+  (rgb/bg-colour r g b))
 
 ;; Colour manipulation
 (defn add
   "Add attributes to a colour"
   [colour & attributes]
-  (apply colour/add-attributes colour attributes))
+  (apply colour/add-attrs colour attributes))
 
 (defn combine
   "Combine two colours"
   [colour1 colour2]
-  (colour/colour-operation :combine colour1 colour2))
+  (colour/op :combine colour1 colour2))
 
 (defn enable-colour
   "Enable colour output for a colour"
   [colour]
-  (colour/colour-operation :enable colour))
+  (colour/op :enable colour))
 
 (defn disable-colour
   "Disable colour output for a colour"
   [colour]
-  (colour/colour-operation :disable colour))
+  (colour/op :disable colour))
 
 ;; String operations
 (defn colourize
@@ -440,18 +440,18 @@ colours/
   [colour text]
   (ansi/colourize colour text))
 
-(defn strip-colours
+(defn strip
   "Remove ANSI colour codes from text"
   [text]
-  (ansi/strip-colours (colour/create-colour []) text))
+  (ansi/strip (colour/create-colour []) text))
 
 ;; Printing functions
-(defn print-colour
+(defn print
   "Print coloured text"
   [colour text]
   (print/print-with-colour colour text))
 
-(defn println-colour
+(defn println
   "Print coloured text with newline"
   [colour text]
   (print/println-with-colour colour text))
@@ -541,7 +541,7 @@ colours/
 
 ### 3. Multi-method Usage
 
-- **colour-operation**: Extensible operations on colours (combine, enable, disable, etc.)
+- **op**: Extensible operations on colours (combine, enable, disable, etc.)
 - Allows for easy extension with new colour operations without modifying existing code
 
 ### 4. Key Features
@@ -562,7 +562,7 @@ colours/
 
 #### Flexible Printing API
 ```clojure
-(println-colour (colour fg-red bold) "Error message")
+(println (colour fg-red bold) "Error message")
 (printf-colour (colour fg-green) "Success: %d items processed" 42)
 
 ;; Or use convenience functions
@@ -621,11 +621,11 @@ colours/
 
 ;; Create custom colours
 (def warning-style (colour/colour colour/fg-yellow colour/bold))
-(colour/println-colour warning-style "Warning message")
+(colour/println warning-style "Warning message")
 
 ;; RGB colours
 (def orange (colour/rgb 255 128 0))
-(colour/print-colour orange "Orange text")
+(colour/print orange "Orange text")
 
 ;; Combine colours and styles
 (def error-style (-> (colour/colour colour/fg-red)

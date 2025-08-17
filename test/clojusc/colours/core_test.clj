@@ -55,7 +55,7 @@
   
   (testing "Strip colours"
     (let [coloured-text "\u001b[31mtest\u001b[0m"
-          stripped (colours/strip-colours coloured-text)]
+          stripped (colours/strip coloured-text)]
       (is (= "test" stripped)))))
 
 (deftest test-global-colour-control
