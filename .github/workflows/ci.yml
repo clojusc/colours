@@ -1,0 +1,239 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  release:
+    types: [ published ]
+
+env:
+  CLOJURE_CLI_VERSION: 1.11.1.1429
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }} with Java ${{ matrix.java }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        java: [11, 17, 21]
+        # Test with different Clojure versions
+        clojure: [1.11.1, 1.10.3]
+        exclude:
+          # Skip some combinations to reduce build time
+          - os: windows-latest
+            java: 11
+          - os: macos-latest
+            java: 11
+            clojure: 1.10.3
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: ${{ matrix.java }}
+
+    - name: Setup Clojure CLI
+      uses: DeLaGuardo/setup-clojure@12.5
+      with:
+        cli: ${{ env.CLOJURE_CLI_VERSION }}
+
+    - name: Cache Clojure dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.m2/repository
+          ~/.gitlibs
+          ~/.deps.clj
+        key: ${{ runner.os }}-clojure-${{ hashFiles('**/deps.edn') }}
+        restore-keys: |
+          ${{ runner.os }}-clojure-
+
+    - name: Install dependencies
+      run: clojure -P -X:test
+
+    - name: Run tests
+      run: clojure -X:test
+
+    - name: Run demo
+      run: clojure -X:run-x
+
+    - name: Check code formatting (clj-kondo)
+      if: matrix.os == 'ubuntu-latest' && matrix.java == '17' && matrix.clojure == '1.11.1'
+      run: |
+        curl -sLO https://raw.githubusercontent.com/clj-kondo/clj-kondo/master/script/install-clj-kondo
+        chmod +x install-clj-kondo
+        ./install-clj-kondo
+        ./clj-kondo --lint src test
+
+    - name: Generate test report
+      if: matrix.os == 'ubuntu-latest' && matrix.java == '17' && matrix.clojure == '1.11.1'
+      run: clojure -X:test :reporter :junit :output-file target/test-results.xml
+
+    - name: Upload test results
+      if: matrix.os == 'ubuntu-latest' && matrix.java == '17' && matrix.clojure == '1.11.1'
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: target/test-results.xml
+
+  build:
+    name: Build JAR
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Setup Clojure CLI
+      uses: DeLaGuardo/setup-clojure@12.5
+      with:
+        cli: ${{ env.CLOJURE_CLI_VERSION }}
+
+    - name: Cache Clojure dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.m2/repository
+          ~/.gitlibs
+          ~/.deps.clj
+        key: ${{ runner.os }}-clojure-${{ hashFiles('**/deps.edn') }}
+        restore-keys: |
+          ${{ runner.os }}-clojure-
+
+    - name: Build JAR
+      run: clojure -T:build build
+
+    - name: Upload JAR artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: colours-jar
+        path: target/*.jar
+
+  deploy:
+    name: Deploy to Clojars
+    runs-on: ubuntu-latest
+    needs: [test, build]
+    if: github.event_name == 'release' && github.event.action == 'published'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Setup Clojure CLI
+      uses: DeLaGuardo/setup-clojure@12.5
+      with:
+        cli: ${{ env.CLOJURE_CLI_VERSION }}
+
+    - name: Cache Clojure dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.m2/repository
+          ~/.gitlibs
+          ~/.deps.clj
+        key: ${{ runner.os }}-clojure-${{ hashFiles('**/deps.edn') }}
+        restore-keys: |
+          ${{ runner.os }}-clojure-
+
+    - name: Deploy to Clojars
+      env:
+        CLOJARS_USERNAME: ${{ secrets.CLOJARS_USERNAME }}
+        CLOJARS_PASSWORD: ${{ secrets.CLOJARS_PASSWORD }}
+      run: clojure -T:build deploy
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Setup Clojure CLI
+      uses: DeLaGuardo/setup-clojure@12.5
+      with:
+        cli: ${{ env.CLOJURE_CLI_VERSION }}
+
+    - name: Cache Clojure dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.m2/repository
+          ~/.gitlibs
+          ~/.deps.clj
+        key: ${{ runner.os }}-clojure-${{ hashFiles('**/deps.edn') }}
+        restore-keys: |
+          ${{ runner.os }}-clojure-
+
+    - name: Run nvd-clojure security scan
+      run: |
+        clojure -Ttools install nvd-clojure/nvd-clojure '{:mvn/version "RELEASE"}' :as nvd
+        clojure -Tnvd nvd.task/check :classpath '"'"$(clojure -Spath)"'"'
+
+  performance:
+    name: Performance Benchmark
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Setup Clojure CLI
+      uses: DeLaGuardo/setup-clojure@12.5
+      with:
+        cli: ${{ env.CLOJURE_CLI_VERSION }}
+
+    - name: Cache Clojure dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.m2/repository
+          ~/.gitlibs
+          ~/.deps.clj
+        key: ${{ runner.os }}-clojure-${{ hashFiles('**/deps.edn') }}
+        restore-keys: |
+          ${{ runner.os }}-clojure-
+
+    - name: Run performance benchmarks
+      run: |
+        # Add criterium benchmarks if they exist
+        if [ -f "bench/perf.clj" ]; then
+          clojure -X:bench
+        else
+          echo "No performance benchmarks found"
+        fi
