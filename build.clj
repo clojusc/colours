@@ -4,7 +4,7 @@
             [clojure.tools.build.api :as b]
             [deps-deploy.deps-deploy :as dd]))
 
-(def lib 'com.github.clojusc/colours)
+(def lib 'clojusc/colours)
 (def version "0.1.0")
 (def main 'clojusc.colours)
 (def class-dir "target/classes")

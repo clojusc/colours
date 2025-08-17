@@ -7,7 +7,7 @@
 `deps.edn`:
 
 ```clojure
-{:deps {com.github.clojusc/colours {:mvn/version "0.1.0"}}}
+{:deps {clojusc/colours {:mvn/version "0.1.0"}}}
 ```
 
 A lein `project.clj` file:
@@ -15,7 +15,7 @@ A lein `project.clj` file:
 
 ```clojure
 (defproject my-project "1.0.0"
-  :dependencies [[com.github.clojusc/colours "0.1.0"]])
+  :dependencies [[clojusc/colours "0.1.0"]])
 ```
 
 ## Demo
