@@ -5,11 +5,11 @@
 
 (defrecord Colour [attributes no-colour?]
   ansi/ANSIFormattable
-  (format-sequence [this]
+  (format-sequence [_this]
     (when (and (seq attributes) (not no-colour?))
       (ansi/seq attributes)))
   
-  (is-reset? [this]
+  (is-reset? [_this]
     (= attributes [attr/reset]))
   
   ansi/colourable
@@ -18,7 +18,7 @@
       text
       (str (ansi/format-sequence this) text ansi/reset-sequence)))
   
-  (strip [this text]
+  (strip [_this text]
     (str/replace text #"\u001b\[[0-9;]*m" "")))
 
 ;; Constructor functions

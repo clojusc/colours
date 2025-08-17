@@ -5,13 +5,13 @@
 
 (defrecord RGBColour [r g b background? no-colour?]
   ansi/ANSIFormattable
-  (format-sequence [this]
+  (format-sequence [_this]
     (when (not no-colour?)
       (if background?
         (ansi/seq [(ansi/rgb-bg-code r g b)])
         (ansi/seq [(ansi/rgb-fg-code r g b)]))))
   
-  (is-reset? [this] false)
+  (is-reset? [_this] false)
   
   ansi/colourable
   (colourize [this text]
@@ -19,7 +19,7 @@
       text
       (str (ansi/format-sequence this) text ansi/reset-sequence)))
   
-  (strip [this text]
+  (strip [_this text]
     (str/replace text #"\u001b\[[0-9;]*m" "")))
 
 (defn fg-colour

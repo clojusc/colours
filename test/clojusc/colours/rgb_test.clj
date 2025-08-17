@@ -1,5 +1,5 @@
 (ns clojusc.colours.rgb-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest testing is]]
             [clojusc.colours.rgb :as rgb]
             [clojusc.colours.ansi :as ansi]))
 
@@ -31,12 +31,12 @@
     (is (rgb/fg-colour 128 64 32)))
   
   (testing "Invalid RGB values throw errors"
-    (is (thrown? AssertionError (rgb/fg-colour -1 0 0)))
-    (is (thrown? AssertionError (rgb/fg-colour 256 0 0)))
-    (is (thrown? AssertionError (rgb/fg-colour 0 -1 0)))
-    (is (thrown? AssertionError (rgb/fg-colour 0 256 0)))
-    (is (thrown? AssertionError (rgb/fg-colour 0 0 -1)))
-    (is (thrown? AssertionError (rgb/fg-colour 0 0 256)))))
+    (is (try (rgb/fg-colour -1 0 0) false (catch AssertionError _ true)))
+    (is (try (rgb/fg-colour 256 0 0) false (catch AssertionError _ true)))
+    (is (try (rgb/fg-colour 0 -1 0) false (catch AssertionError _ true)))
+    (is (try (rgb/fg-colour 0 256 0) false (catch AssertionError _ true)))
+    (is (try (rgb/fg-colour 0 0 -1) false (catch AssertionError _ true)))
+    (is (try (rgb/fg-colour 0 0 256) false (catch AssertionError _ true)))))
 
 (deftest test-rgb-ansi-formattable
   (testing "RGB foreground format sequence"

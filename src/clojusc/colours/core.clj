@@ -5,8 +5,6 @@
             [clojusc.colours.rgb :as rgb]
             [clojusc.colours.print :as print]
             [clojusc.colours.ansi :as ansi])
-  (:import [clojusc.colours.colour Colour]
-           [clojusc.colours.rgb RGBColour])
   (:refer-clojure :exclude [print, println]))
 
 ;; Colour creation
@@ -83,13 +81,21 @@
       (let [colour# (colour/create-colour [~attr])]
         (apply print/printf-with-colour colour# (str format-str#) args#)))))
 
+#_{:clj-kondo/ignore [:unresolved-symbol]}
 (defcolour red attr/fg-red)
+#_{:clj-kondo/ignore [:unresolved-symbol]}
 (defcolour green attr/fg-green)
+#_{:clj-kondo/ignore [:unresolved-symbol]}
 (defcolour blue attr/fg-blue)
+#_{:clj-kondo/ignore [:unresolved-symbol]}
 (defcolour yellow attr/fg-yellow)
+#_{:clj-kondo/ignore [:unresolved-symbol]}
 (defcolour cyan attr/fg-cyan)
+#_{:clj-kondo/ignore [:unresolved-symbol]}
 (defcolour magenta attr/fg-magenta)
+#_{:clj-kondo/ignore [:unresolved-symbol]}
 (defcolour white attr/fg-white)
+#_{:clj-kondo/ignore [:unresolved-symbol]}
 (defcolour black attr/fg-black)
 
 ;; String formatting functions (like Go's colour.RedString())

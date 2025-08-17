@@ -1,14 +1,12 @@
 (ns clojusc.colours.print-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest testing is]]
             [clojusc.colours.print :as print]
             [clojusc.colours.colour :as colour]
-            [clojusc.colours.attr :as attr]
-            [clojusc.colours.ansi :as ansi]
-            [clojure.java.io :as io]))
+            [clojusc.colours.attr :as attr]))
 
 (deftest test-global-no-colour
   (testing "NO_colour environment variable detection"
-    (let [original-no-colour print/*no-colour*]
+    (let [_original-no-colour print/*no-colour*]
       (binding [print/*no-colour* true]
         (is (true? print/*no-colour*)))
       (binding [print/*no-colour* false]

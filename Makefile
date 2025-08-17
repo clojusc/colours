@@ -3,6 +3,9 @@ default: build
 clean:
 	clojure -T:build clean
 
+lint:
+	clj-kondo --lint src test
+
 build:
 	clojure -T:build build
 

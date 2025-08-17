@@ -1,5 +1,5 @@
 (ns clojusc.colours.colour-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest testing is]]
             [clojusc.colours.colour :as colour]
             [clojusc.colours.attr :as attr]
             [clojusc.colours.ansi :as ansi]))

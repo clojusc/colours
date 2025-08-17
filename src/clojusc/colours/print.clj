@@ -1,6 +1,5 @@
 (ns clojusc.colours.print
-  (:require [clojusc.colours.ansi :as ansi]
-            [clojure.java.io :as io]))
+  (:require [clojusc.colours.ansi :as ansi]))
 
 (def ^:dynamic *no-colour*
   "Global colour disable flag"
