@@ -2,77 +2,77 @@
   (:require [clojusc.colours.ansi :as ansi]
             [clojure.java.io :as io]))
 
-(def ^:dynamic *no-color* 
-  "Global color disable flag"
-  (not (nil? (System/getenv "NO_COLOR"))))
+(def ^:dynamic *no-colour*
+  "Global colour disable flag"
+  (not (nil? (System/getenv "NO_colour"))))
 
 (def ^:dynamic *output-writer* 
-  "Default output writer for colored text"
+  "Default output writer for coloured text"
   *out*)
 
-(defn- should-disable-color? [colorable]
-  (or *no-color* 
-      (and (satisfies? ansi/Colorable colorable)
-           (get colorable :no-color?))))
+(defn- should-disable-colour? [colourable]
+  (or *no-colour*
+      (and (satisfies? ansi/colourable colourable)
+           (get colourable :no-colour?))))
 
-(defn print-colored
-  "Print colored text to writer"
-  [color writer text]
-  (if (should-disable-color? color)
+(defn print-coloured
+  "Print coloured text to writer"
+  [colour writer text]
+  (if (should-disable-colour? colour)
     (.write writer text)
-    (.write writer (ansi/colorize color text))))
+    (.write writer (ansi/colourize colour text))))
 
-(defn format-colored
-  "Format and colorize text"
-  [color format-str & args]
+(defn format-coloured
+  "Format and colourize text"
+  [colour format-str & args]
   (let [formatted (apply format format-str args)]
-    (if (should-disable-color? color)
+    (if (should-disable-colour? colour)
       formatted
-      (ansi/colorize color formatted))))
+      (ansi/colourize colour formatted))))
 
 ;; High-level printing functions
-(defn print-with-color
-  "Print text with color to *output-writer*"
-  ([color text]
-   (print-with-color color *output-writer* text))
-  ([color writer text]
-   (print-colored color writer text)
+(defn print-with-colour
+  "Print text with colour to *output-writer*"
+  ([colour text]
+   (print-with-colour colour *output-writer* text))
+  ([colour writer text]
+   (print-coloured colour writer text)
    (.flush writer)))
 
-(defn println-with-color
-  "Print text with color and newline"
-  ([color text]
-   (println-with-color color *output-writer* text))
-  ([color writer text]
-   (print-colored color writer (str text \newline))
+(defn println-with-colour
+  "Print text with colour and newline"
+  ([colour text]
+   (println-with-colour colour *output-writer* text))
+  ([colour writer text]
+   (print-coloured colour writer (str text \newline))
    (.flush writer)))
 
-(defn printf-with-color
-  "Printf with color formatting"
-  ([color format-str & args]
-   (let [formatted (apply format-colored color format-str args)]
+(defn printf-with-colour
+  "Printf with colour formatting"
+  ([colour format-str & args]
+   (let [formatted (apply format-coloured colour format-str args)]
      (.write *output-writer* formatted)
      (.flush *output-writer*))))
 
 ;; Function generators (like Go's PrintfFunc)
 (defn make-print-fn
-  "Create a print function with pre-configured color"
-  [color]
-  (fn [text] (print-with-color color text)))
+  "Create a print function with pre-configured colour"
+  [colour]
+  (fn [text] (print-with-colour colour text)))
 
 (defn make-println-fn
-  "Create a println function with pre-configured color"
-  [color]
-  (fn [text] (println-with-color color text)))
+  "Create a println function with pre-configured colour"
+  [colour]
+  (fn [text] (println-with-colour colour text)))
 
 (defn make-printf-fn
-  "Create a printf function with pre-configured color"
-  [color]
+  "Create a printf function with pre-configured colour"
+  [colour]
   (fn [format-str & args]
-    (apply printf-with-color color format-str args)))
+    (apply printf-with-colour colour format-str args)))
 
 (defn make-format-fn
-  "Create a string formatting function with pre-configured color"
-  [color]
+  "Create a string formatting function with pre-configured colour"
+  [colour]
   (fn [format-str & args]
-    (apply format-colored color format-str args)))
+    (apply format-coloured colour format-str args)))

@@ -1,51 +1,51 @@
 (ns clojusc.colours.rgb
-  (:require [clojusc.colours.color :as color]
+  (:require [clojusc.colours.colour :as colour]
             [clojusc.colours.ansi :as ansi]
             [clojure.string :as str]))
 
-(defrecord RGBColor [r g b background? no-color?]
+(defrecord RGBcolour [r g b background? no-colour?]
   ansi/ANSIFormattable
   (format-sequence [this]
-    (when (not no-color?)
+    (when (not no-colour?)
       (if background?
         (ansi/make-escape-sequence [(ansi/rgb-background-code r g b)])
         (ansi/make-escape-sequence [(ansi/rgb-foreground-code r g b)]))))
   
   (reset-sequence? [this] false)
   
-  ansi/Colorable
-  (colorize [this text]
-    (if no-color?
+  ansi/colourable
+  (colourize [this text]
+    (if no-colour?
       text
       (str (ansi/format-sequence this) text ansi/reset-sequence)))
   
-  (strip-colors [this text]
+  (strip-colours [this text]
     (str/replace text #"\u001b\[[0-9;]*m" "")))
 
-(defn rgb-color
-  "Create an RGB foreground color"
-  ([r g b] (rgb-color r g b false))
-  ([r g b no-color?]
+(defn rgb-colour
+  "Create an RGB foreground colour"
+  ([r g b] (rgb-colour r g b false))
+  ([r g b no-colour?]
    {:pre [(and (>= r 0) (<= r 255))
           (and (>= g 0) (<= g 255))
           (and (>= b 0) (<= b 255))]}
-   (->RGBColor r g b false no-color?)))
+   (->RGBcolour r g b false no-colour?)))
 
-(defn rgb-bg-color
-  "Create an RGB background color"
-  ([r g b] (rgb-bg-color r g b false))
-  ([r g b no-color?]
+(defn rgb-bg-colour
+  "Create an RGB background colour"
+  ([r g b] (rgb-bg-colour r g b false))
+  ([r g b no-colour?]
    {:pre [(and (>= r 0) (<= r 255))
           (and (>= g 0) (<= g 255))
           (and (>= b 0) (<= b 255))]}
-   (->RGBColor r g b true no-color?)))
+   (->RGBcolour r g b true no-colour?)))
 
 (defn add-rgb
-  "Add RGB foreground color to existing color"
-  [color r g b]
-  (color/color-operation :combine color (rgb-color r g b)))
+  "Add RGB foreground colour to existing colour"
+  [colour r g b]
+  (colour/colour-operation :combine colour (rgb-colour r g b)))
 
 (defn add-rgb-bg
-  "Add RGB background color to existing color"
-  [color r g b]
-  (color/color-operation :combine color (rgb-bg-color r g b)))
+  "Add RGB background colour to existing colour"
+  [colour r g b]
+  (colour/colour-operation :combine colour (rgb-bg-colour r g b)))

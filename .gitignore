@@ -6,8 +6,6 @@
 .DS_Store
 .eastwood
 .factorypath
-.hg/
-.hgignore
 .java-version
 .lein-*
 .lsp/.cache
@@ -29,3 +27,4 @@
 /classes
 /target
 .claude
+.idea

@@ -9,10 +9,10 @@
   (format-sequence [this] "Generate ANSI escape sequence")
   (reset-sequence? [this] "Check if this represents a reset"))
 
-(defprotocol Colorable
-  "Protocol for applying colors to text"
-  (colorize [this text] "Apply color formatting to text")
-  (strip-colors [this text] "Remove color formatting from text"))
+(defprotocol colourable
+  "Protocol for applying colours to text"
+  (colourize [this text] "Apply colour formatting to text")
+  (strip-colours [this text] "Remove colour formatting from text"))
 
 (defn- join-codes [codes]
   (str/join ";" (map str codes)))

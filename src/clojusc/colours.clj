@@ -1,28 +1,28 @@
 (ns clojusc.colours
-  (:require [clojusc.colours.core :as colors])
+  (:require [clojusc.colours.core :as colours])
   (:gen-class))
 
 (defn greet
-  "Colorful greeting function demonstrating the color library."
+  "Colourful greeting function demonstrating the colour library."
   [data]
+  (println "\nColour library demo ...\n")
   (let [name (or (:name data) "World")]
-    (colors/print-color (colors/color colors/fg-green colors/bold) "Hello, ")
-    (colors/print-color (colors/color colors/fg-cyan) name)
-    (colors/println-color (colors/color colors/fg-green colors/bold) "!")
+    (colours/print-colour (colours/colour colours/fg-green colours/bold) "Hello, ")
+    (colours/print-colour (colours/colour colours/fg-cyan) name)
+    (colours/println-colour (colours/colour colours/fg-green colours/bold) "!\n")
+
+    (colours/red "This is red text\n")
+    (colours/green "This is green text\n")
+    (colours/blue "This is blue text\n")
+    (colours/println-colour (colours/colour colours/fg-yellow colours/bold) "Bold yellow text")
     
-    (println "\nColor library demo:")
-    (colors/red "This is red text")
-    (colors/green "This is green text")
-    (colors/blue "This is blue text")
-    (colors/println-color (colors/color colors/fg-yellow colors/bold) "Bold yellow text")
-    
-    (let [orange (colors/rgb 255 128 0)]
-      (colors/println-color orange "This is orange RGB text"))
+    (let [orange (colours/rgb 255 128 0)]
+      (colours/println-colour orange "This is orange RGB text"))
     
     (println "\nString formatting:")
-    (println "Status:" (colors/green-string "SUCCESS") "- All tests passed!")))
+    (println "Status:" (colours/green-string "SUCCESS") "- Don't worry, be happy!\n")))
 
 (defn -main
-  "Color library demonstration."
+  "Colour library demonstration."
   [& args]
   (greet {:name (first args)}))

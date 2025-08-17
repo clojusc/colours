@@ -1,90 +1,90 @@
-(ns clojusc.colours.color-test
+(ns clojusc.colours.colour-test
   (:require [clojure.test :refer :all]
-            [clojusc.colours.color :as color]
+            [clojusc.colours.colour :as colour]
             [clojusc.colours.attributes :as attr]
             [clojusc.colours.ansi :as ansi]))
 
-(deftest test-color-record
-  (testing "Color record creation"
-    (let [c (color/create-color [attr/fg-red attr/bold])]
+(deftest test-colour-record
+  (testing "Colour record creation"
+    (let [c (colour/create-colour [attr/fg-red attr/bold])]
       (is (= [31 1] (:attributes c)))
-      (is (false? (:no-color? c)))))
+      (is (false? (:no-colour? c)))))
   
-  (testing "Color with no-color flag"
-    (let [c (color/create-color [attr/fg-red] true)]
-      (is (true? (:no-color? c))))))
+  (testing "Colour with no-colour flag"
+    (let [c (colour/create-colour [attr/fg-red] true)]
+      (is (true? (:no-colour? c))))))
 
 (deftest test-ansi-formattable
   (testing "Format sequence generation"
-    (let [c (color/create-color [attr/fg-red attr/bold])]
+    (let [c (colour/create-colour [attr/fg-red attr/bold])]
       (is (= "\u001b[31;1m" (ansi/format-sequence c)))))
   
-  (testing "No format when no-color is true"
-    (let [c (color/create-color [attr/fg-red] true)]
+  (testing "No format when no-colour is true"
+    (let [c (colour/create-colour [attr/fg-red] true)]
       (is (nil? (ansi/format-sequence c)))))
   
   (testing "Reset sequence detection"
-    (let [reset-color (color/create-color [attr/reset])
-          regular-color (color/create-color [attr/fg-red])]
-      (is (ansi/reset-sequence? reset-color))
-      (is (not (ansi/reset-sequence? regular-color))))))
+    (let [reset-colour (colour/create-colour [attr/reset])
+          regular-colour (colour/create-colour [attr/fg-red])]
+      (is (ansi/reset-sequence? reset-colour))
+      (is (not (ansi/reset-sequence? regular-colour))))))
 
-(deftest test-colorable
-  (testing "Colorize text"
-    (let [c (color/create-color [attr/fg-red])]
-      (is (= "\u001b[31mtest\u001b[0m" (ansi/colorize c "test")))))
+(deftest test-colourable
+  (testing "Colourize text"
+    (let [c (colour/create-colour [attr/fg-red])]
+      (is (= "\u001b[31mtest\u001b[0m" (ansi/colourize c "test")))))
   
-  (testing "No colorize when no-color is true"
-    (let [c (color/create-color [attr/fg-red] true)]
-      (is (= "test" (ansi/colorize c "test")))))
+  (testing "No colourize when no-colour is true"
+    (let [c (colour/create-colour [attr/fg-red] true)]
+      (is (= "test" (ansi/colourize c "test")))))
   
-  (testing "Strip colors"
-    (let [c (color/create-color [])
-          colored-text "\u001b[31mtest\u001b[0m"]
-      (is (= "test" (ansi/strip-colors c colored-text))))))
+  (testing "Strip colours"
+    (let [c (colour/create-colour [])
+          coloured-text "\u001b[31mtest\u001b[0m"]
+      (is (= "test" (ansi/strip-colours c coloured-text))))))
 
 (deftest test-add-attributes
   (testing "Adding single attribute"
-    (let [red (color/create-color [attr/fg-red])
-          red-bold (color/add-attributes red attr/bold)]
+    (let [red (colour/create-colour [attr/fg-red])
+          red-bold (colour/add-attributes red attr/bold)]
       (is (= [31 1] (:attributes red-bold)))))
   
   (testing "Adding multiple attributes"
-    (let [red (color/create-color [attr/fg-red])
-          styled (color/add-attributes red attr/bold attr/underline)]
+    (let [red (colour/create-colour [attr/fg-red])
+          styled (colour/add-attributes red attr/bold attr/underline)]
       (is (= [31 1 4] (:attributes styled))))))
 
-(deftest test-color-operations
+(deftest test-colour-operations
   (testing "Combine operation"
-    (let [red (color/create-color [attr/fg-red])
-          bold (color/create-color [attr/bold])
-          combined (color/color-operation :combine red bold)]
+    (let [red (colour/create-colour [attr/fg-red])
+          bold (colour/create-colour [attr/bold])
+          combined (colour/colour-operation :combine red bold)]
       (is (= [31 1] (:attributes combined)))))
   
   (testing "Enable operation"
-    (let [disabled (color/create-color [attr/fg-red] true)
-          enabled (color/color-operation :enable disabled)]
-      (is (false? (:no-color? enabled)))))
+    (let [disabled (colour/create-colour [attr/fg-red] true)
+          enabled (colour/colour-operation :enable disabled)]
+      (is (false? (:no-colour? enabled)))))
   
   (testing "Disable operation"
-    (let [enabled (color/create-color [attr/fg-red])
-          disabled (color/color-operation :disable enabled)]
-      (is (true? (:no-color? disabled)))))
+    (let [enabled (colour/create-colour [attr/fg-red])
+          disabled (colour/colour-operation :disable enabled)]
+      (is (true? (:no-colour? disabled)))))
   
   (testing "Has foreground check"
-    (let [fg-color (color/create-color [attr/fg-red])
-          format-color (color/create-color [attr/bold])]
-      (is (color/color-operation :has-foreground? fg-color))
-      (is (not (color/color-operation :has-foreground? format-color)))))
+    (let [fg-colour (colour/create-colour [attr/fg-red])
+          format-colour (colour/create-colour [attr/bold])]
+      (is (colour/colour-operation :has-foreground? fg-colour))
+      (is (not (colour/colour-operation :has-foreground? format-colour)))))
   
   (testing "Has background check"
-    (let [bg-color (color/create-color [attr/bg-red])
-          fg-color (color/create-color [attr/fg-red])]
-      (is (color/color-operation :has-background? bg-color))
-      (is (not (color/color-operation :has-background? fg-color)))))
+    (let [bg-colour (colour/create-colour [attr/bg-red])
+          fg-colour (colour/create-colour [attr/fg-red])]
+      (is (colour/colour-operation :has-background? bg-colour))
+      (is (not (colour/colour-operation :has-background? fg-colour)))))
   
   (testing "Has formatting check"
-    (let [formatted (color/create-color [attr/bold])
-          plain (color/create-color [attr/fg-red])]
-      (is (color/color-operation :has-formatting? formatted))
-      (is (not (color/color-operation :has-formatting? plain))))))
+    (let [formatted (colour/create-colour [attr/bold])
+          plain (colour/create-colour [attr/fg-red])]
+      (is (colour/colour-operation :has-formatting? formatted))
+      (is (not (colour/colour-operation :has-formatting? plain))))))

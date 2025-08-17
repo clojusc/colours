@@ -1,12 +1,12 @@
 (ns clojusc.colours.core
-  "Main public API for the Clojure color library"
+  "Main public API for the Clojure colour library"
   (:require [clojusc.colours.attributes :as attr]
-            [clojusc.colours.color :as color]
+            [clojusc.colours.colour :as colour]
             [clojusc.colours.rgb :as rgb]
             [clojusc.colours.print :as print]
             [clojusc.colours.ansi :as ansi])
-  (:import [clojusc.colours.color Color]
-           [clojusc.colours.rgb RGBColor]))
+  (:import [clojusc.colours.colour Colour]
+           [clojusc.colours.rgb RGBcolour]))
 
 ;; Re-export commonly used attributes
 (def bold attr/bold)
@@ -24,125 +24,125 @@
 (def bg-green attr/bg-green)
 (def bg-blue attr/bg-blue)
 
-;; Color creation
-(defn color
-  "Create a new color with the given attributes"
+;; Colour creation
+(defn colour
+  "Create a new colour with the given attributes"
   [& attributes]
-  (color/create-color attributes))
+  (colour/create-colour attributes))
 
 (defn rgb
-  "Create RGB foreground color"
+  "Create RGB foreground colour"
   [r g b]
-  (rgb/rgb-color r g b))
+  (rgb/rgb-colour r g b))
 
 (defn rgb-bg
-  "Create RGB background color"
+  "Create RGB background colour"
   [r g b]
-  (rgb/rgb-bg-color r g b))
+  (rgb/rgb-bg-colour r g b))
 
-;; Color manipulation
+;; Colour manipulation
 (defn add
-  "Add attributes to a color"
-  [color & attributes]
-  (apply color/add-attributes color attributes))
+  "Add attributes to a colour"
+  [colour & attributes]
+  (apply colour/add-attributes colour attributes))
 
 (defn combine
-  "Combine two colors"
-  [color1 color2]
-  (color/color-operation :combine color1 color2))
+  "Combine two colours"
+  [colour1 colour2]
+  (colour/colour-operation :combine colour1 colour2))
 
-(defn enable-color
-  "Enable color output for a color"
-  [color]
-  (color/color-operation :enable color))
+(defn enable-colour
+  "Enable colour output for a colour"
+  [colour]
+  (colour/colour-operation :enable colour))
 
-(defn disable-color
-  "Disable color output for a color"
-  [color]
-  (color/color-operation :disable color))
+(defn disable-colour
+  "Disable colour output for a colour"
+  [colour]
+  (colour/colour-operation :disable colour))
 
 ;; String operations
-(defn colorize
-  "Apply color to text string"
-  [color text]
-  (ansi/colorize color text))
+(defn colourize
+  "Apply colour to text string"
+  [colour text]
+  (ansi/colourize colour text))
 
-(defn strip-colors
-  "Remove ANSI color codes from text"
+(defn strip-colours
+  "Remove ANSI colour codes from text"
   [text]
-  (ansi/strip-colors (color/create-color []) text))
+  (ansi/strip-colours (colour/create-colour []) text))
 
 ;; Printing functions
-(defn print-color
-  "Print colored text"
-  [color text]
-  (print/print-with-color color text))
+(defn print-colour
+  "Print coloured text"
+  [colour text]
+  (print/print-with-colour colour text))
 
-(defn println-color
-  "Print colored text with newline"
-  [color text]
-  (print/println-with-color color text))
+(defn println-colour
+  "Print coloured text with newline"
+  [colour text]
+  (print/println-with-colour colour text))
 
-(defn printf-color
-  "Printf with color"
-  [color format-str & args]
-  (apply print/printf-with-color color format-str args))
+(defn printf-colour
+  "Printf with colour"
+  [colour format-str & args]
+  (apply print/printf-with-colour colour format-str args))
 
-;; Convenient color functions (like Go's color.Red(), color.Green(), etc.)
-(defmacro defcolor
-  "Define a convenient color function"
+;; Convenient colour functions (like Go's colour.Red(), colour.Green(), etc.)
+(defmacro defcolour
+  "Define a convenient colour function"
   [name attr]
   `(defn ~name
      ([text#] (~name "%s" text#))
      ([format-str# & args#]
-      (let [color# (color/create-color [~attr])]
-        (apply print/printf-with-color color# (str format-str# "\\n") args#)))))
+      (let [colour# (colour/create-colour [~attr])]
+        (apply print/printf-with-colour colour# (str format-str#) args#)))))
 
-(defcolor red attr/fg-red)
-(defcolor green attr/fg-green)
-(defcolor blue attr/fg-blue)
-(defcolor yellow attr/fg-yellow)
-(defcolor cyan attr/fg-cyan)
-(defcolor magenta attr/fg-magenta)
-(defcolor white attr/fg-white)
-(defcolor black attr/fg-black)
+(defcolour red attr/fg-red)
+(defcolour green attr/fg-green)
+(defcolour blue attr/fg-blue)
+(defcolour yellow attr/fg-yellow)
+(defcolour cyan attr/fg-cyan)
+(defcolour magenta attr/fg-magenta)
+(defcolour white attr/fg-white)
+(defcolour black attr/fg-black)
 
-;; String formatting functions (like Go's color.RedString())
-(defmacro defcolor-string
-  "Define a color string function"
+;; String formatting functions (like Go's colour.RedString())
+(defmacro defcolour-string
+  "Define a colour string function"
   [name attr]
   `(defn ~(symbol (str name "-string"))
      ([text#] (~(symbol (str name "-string")) "%s" text#))
      ([format-str# & args#]
-      (let [color# (color/create-color [~attr])]
-        (apply print/format-colored color# format-str# args#)))))
+      (let [colour# (colour/create-colour [~attr])]
+        (apply print/format-coloured colour# format-str# args#)))))
 
-(defcolor-string red attr/fg-red)
-(defcolor-string green attr/fg-green)
-(defcolor-string blue attr/fg-blue)
-(defcolor-string yellow attr/fg-yellow)
-(defcolor-string cyan attr/fg-cyan)
-(defcolor-string magenta attr/fg-magenta)
-(defcolor-string white attr/fg-white)
-(defcolor-string black attr/fg-black)
+(defcolour-string red attr/fg-red)
+(defcolour-string green attr/fg-green)
+(defcolour-string blue attr/fg-blue)
+(defcolour-string yellow attr/fg-yellow)
+(defcolour-string cyan attr/fg-cyan)
+(defcolour-string magenta attr/fg-magenta)
+(defcolour-string white attr/fg-white)
+(defcolour-string black attr/fg-black)
 
-;; Global color control
-(defn set-no-color!
-  "Globally disable color output"
+;; Global colour control
+(defn set-no-colour!
+  "Globally disable colour output"
   [disabled?]
-  (alter-var-root #'print/*no-color* (constantly disabled?)))
+  (alter-var-root #'print/*no-colour* (constantly disabled?)))
 
-(defn no-color?
-  "Check if color output is globally disabled"
+(defn no-colour?
+  "Check if colour output is globally disabled"
   []
-  print/*no-color*)
+  print/*no-colour*)
 
-;; High-intensity color variants
-(def hi-red (color/create-color [attr/fg-hi-red]))
-(def hi-green (color/create-color [attr/fg-hi-green]))
-(def hi-blue (color/create-color [attr/fg-hi-blue]))
-(def hi-yellow (color/create-color [attr/fg-hi-yellow]))
-(def hi-cyan (color/create-color [attr/fg-hi-cyan]))
-(def hi-magenta (color/create-color [attr/fg-hi-magenta]))
-(def hi-white (color/create-color [attr/fg-hi-white]))
-(def hi-black (color/create-color [attr/fg-hi-black]))
+;; High-intensity colour variants
+(def hi-red (colour/create-colour [attr/fg-hi-red]))
+(def hi-green (colour/create-colour [attr/fg-hi-green]))
+(def hi-blue (colour/create-colour [attr/fg-hi-blue]))
+(def hi-yellow (colour/create-colour [attr/fg-hi-yellow]))
+(def hi-cyan (colour/create-colour [attr/fg-hi-cyan]))
+(def hi-magenta (colour/create-colour [attr/fg-hi-magenta]))
+(def hi-white (colour/create-colour [attr/fg-hi-white]))
+(def hi-black (colour/create-colour [attr/fg-hi-black]))

@@ -15,6 +15,9 @@ ci:
 install:
 	clojure -T:build install
 
+demo:
+	@clojure -X:run-x
+
 deploy:
 	@export CLOJARS_USERNAME=$(shell cat ~/.clojars/username) && \
 	export CLOJARS_PASSWORD=$(shell cat ~/.clojars/token) && \

@@ -12,7 +12,7 @@
 (def ^:const concealed 8)
 (def ^:const crossed-out 9)
 
-;; Foreground colors
+;; Foreground colours
 (def ^:const fg-black 30)
 (def ^:const fg-red 31)
 (def ^:const fg-green 32)
@@ -22,7 +22,7 @@
 (def ^:const fg-cyan 36)
 (def ^:const fg-white 37)
 
-;; High-intensity foreground colors
+;; High-intensity foreground colours
 (def ^:const fg-hi-black 90)
 (def ^:const fg-hi-red 91)
 (def ^:const fg-hi-green 92)
@@ -32,7 +32,7 @@
 (def ^:const fg-hi-cyan 96)
 (def ^:const fg-hi-white 97)
 
-;; Background colors
+;; Background colours
 (def ^:const bg-black 40)
 (def ^:const bg-red 41)
 (def ^:const bg-green 42)
@@ -42,7 +42,7 @@
 (def ^:const bg-cyan 46)
 (def ^:const bg-white 47)
 
-;; High-intensity background colors
+;; High-intensity background colours
 (def ^:const bg-hi-black 100)
 (def ^:const bg-hi-red 101)
 (def ^:const bg-hi-green 102)
@@ -55,11 +55,11 @@
 ;; Attribute type classifications
 (def format-attributes #{bold faint italic underline blink-slow blink-rapid 
                          reverse-video concealed crossed-out})
-(def fg-color-attributes #{fg-black fg-red fg-green fg-yellow fg-blue 
+(def fg-colour-attributes #{fg-black fg-red fg-green fg-yellow fg-blue
                            fg-magenta fg-cyan fg-white fg-hi-black fg-hi-red 
                            fg-hi-green fg-hi-yellow fg-hi-blue fg-hi-magenta 
                            fg-hi-cyan fg-hi-white})
-(def bg-color-attributes #{bg-black bg-red bg-green bg-yellow bg-blue 
+(def bg-colour-attributes #{bg-black bg-red bg-green bg-yellow bg-blue
                            bg-magenta bg-cyan bg-white bg-hi-black bg-hi-red 
                            bg-hi-green bg-hi-yellow bg-hi-blue bg-hi-magenta 
                            bg-hi-cyan bg-hi-white})

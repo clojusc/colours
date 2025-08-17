@@ -1,29 +1,29 @@
-# Clojure Color Library Implementation Plan
+# Clojure colour Library Implementation Plan
 
 ## Overview
 
-This document provides a detailed implementation plan to convert the Go fatih/color library to a Clojure library following Clojure best practices, protocols, and multi-methods where applicable.
+This document provides a detailed implementation plan to convert the Go fatih/colour library to a Clojure library following Clojure best practices, protocols, and multi-methods where applicable.
 
 ## Original Library Analysis
 
-The Go fatih/color library provides:
-- ANSI escape code generation for terminal colors
-- Support for foreground/background colors, styles (bold, italic, underline)
-- 24-bit RGB color support
-- Color composition and chaining
-- Print functions with color formatting
-- Global and local color enable/disable functionality
+The Go fatih/colour library provides:
+- ANSI escape code generation for terminal colours
+- Support for foreground/background colours, styles (bold, italic, underline)
+- 24-bit RGB colour support
+- colour composition and chaining
+- Print functions with colour formatting
+- Global and local colour enable/disable functionality
 - Cross-platform support (including Windows)
 
 ### Key Go Library Features:
-- `Color` struct with SGR parameters
+- `colour` struct with SGR parameters
 - Attribute constants (FgRed, Bold, etc.)
-- Color creation with `New()` and `Add()` methods  
+- Colour creation with `New()` and `Add()` methods  
 - Print functions (`Print`, `Printf`, `Println`, `Fprint`, etc.)
 - String formatting functions (`Sprint`, `Sprintf`, `Sprintln`)
 - Function creators (`PrintfFunc`, `SprintFunc`, etc.)
-- RGB color support (`RGB()`, `BgRGB()`, `AddRGB()`)
-- Global color control (`Set()`, `Unset()`, `NoColor`)
+- RGB colour support (`RGB()`, `BgRGB()`, `AddRGB()`)
+- Global colour control (`Set()`, `Unset()`, `Nocolour`)
 
 ## Clojure Library Design
 
@@ -36,24 +36,24 @@ colours/
 ├── src/clojusc/
 │   └── colours/
 │       ├── core.clj           ; Main public API
-│       ├── attributes.clj     ; Color and style attributes
+│       ├── attributes.clj     ; colour and style attributes
 │       ├── ansi.clj          ; ANSI escape code generation
-│       ├── color.clj         ; Color creation and manipulation
-│       ├── print.clj         ; Print functions with color
-│       └── rgb.clj           ; RGB color support
+│       ├── colour.clj         ; colour creation and manipulation
+│       ├── print.clj         ; Print functions with colour
+│       └── rgb.clj           ; RGB colour support
 ├── test/clojusc
 │   └── colours/
 │       ├── core_test.clj
-│       ├── color_test.clj
+│       ├── colour_test.clj
 │       ├── print_test.clj
 │       └── rgb_test.clj
 └── resources/
-    └── color_mappings.edn    ; Color name mappings
+    └── colour_mappings.edn    ; colour name mappings
 ```
 
 ### Core Namespace Design
 
-#### 1. Color Attributes (attributes.clj)
+#### 1. colour Attributes (attributes.clj)
 
 ```clojure
 (ns clojusc.colours.attributes)
@@ -70,7 +70,7 @@ colours/
 (def ^:const concealed 8)
 (def ^:const crossed-out 9)
 
-;; Foreground colors
+;; Foreground colours
 (def ^:const fg-black 30)
 (def ^:const fg-red 31)
 (def ^:const fg-green 32)
@@ -80,7 +80,7 @@ colours/
 (def ^:const fg-cyan 36)
 (def ^:const fg-white 37)
 
-;; High-intensity foreground colors
+;; High-intensity foreground colours
 (def ^:const fg-hi-black 90)
 (def ^:const fg-hi-red 91)
 (def ^:const fg-hi-green 92)
@@ -90,7 +90,7 @@ colours/
 (def ^:const fg-hi-cyan 96)
 (def ^:const fg-hi-white 97)
 
-;; Background colors
+;; Background colours
 (def ^:const bg-black 40)
 (def ^:const bg-red 41)
 (def ^:const bg-green 42)
@@ -100,7 +100,7 @@ colours/
 (def ^:const bg-cyan 46)
 (def ^:const bg-white 47)
 
-;; High-intensity background colors
+;; High-intensity background colours
 (def ^:const bg-hi-black 100)
 (def ^:const bg-hi-red 101)
 (def ^:const bg-hi-green 102)
@@ -113,11 +113,11 @@ colours/
 ;; Attribute type classifications
 (def format-attributes #{bold faint italic underline blink-slow blink-rapid 
                          reverse-video concealed crossed-out})
-(def fg-color-attributes #{fg-black fg-red fg-green fg-yellow fg-blue 
+(def fg-colour-attributes #{fg-black fg-red fg-green fg-yellow fg-blue 
                            fg-magenta fg-cyan fg-white fg-hi-black fg-hi-red 
                            fg-hi-green fg-hi-yellow fg-hi-blue fg-hi-magenta 
                            fg-hi-cyan fg-hi-white})
-(def bg-color-attributes #{bg-black bg-red bg-green bg-yellow bg-blue 
+(def bg-colour-attributes #{bg-black bg-red bg-green bg-yellow bg-blue 
                            bg-magenta bg-cyan bg-white bg-hi-black bg-hi-red 
                            bg-hi-green bg-hi-yellow bg-hi-blue bg-hi-magenta 
                            bg-hi-cyan bg-hi-white})
@@ -137,10 +137,10 @@ colours/
   (format-sequence [this] "Generate ANSI escape sequence")
   (reset-sequence? [this] "Check if this represents a reset"))
 
-(defprotocol Colorable
-  "Protocol for applying colors to text"
-  (colorize [this text] "Apply color formatting to text")
-  (strip-colors [this text] "Remove color formatting from text"))
+(defprotocol colourable
+  "Protocol for applying colours to text"
+  (colourize [this text] "Apply colour formatting to text")
+  (strip-colours [this text] "Remove colour formatting from text"))
 
 (defn- join-codes [codes]
   (str/join ";" (map str codes)))
@@ -155,129 +155,129 @@ colours/
   (format "48;2;%d;%d;%d" r g b))
 ```
 
-#### 3. Color Record and Multi-methods (color.clj)
+#### 3. colour Record and Multi-methods (colour.clj)
 
 ```clojure
-(ns clojusc.colours.color
+(ns clojusc.colours.colour
   (:require [clojusc.colours.ansi :as ansi]
             [clojusc.colours.attributes :as attr]
             [clojure.string :as str]))
 
-(defrecord Color [attributes no-color?]
+(defrecord colour [attributes no-colour?]
   ansi/ANSIFormattable
   (format-sequence [this]
-    (when (and (seq attributes) (not no-color?))
+    (when (and (seq attributes) (not no-colour?))
       (ansi/make-escape-sequence attributes)))
   
   (reset-sequence? [this]
     (= attributes [attr/reset]))
   
-  ansi/Colorable
-  (colorize [this text]
-    (if (or no-color? (empty? attributes))
+  ansi/colourable
+  (colourize [this text]
+    (if (or no-colour? (empty? attributes))
       text
       (str (ansi/format-sequence this) text ansi/reset-sequence)))
   
-  (strip-colors [this text]
+  (strip-colours [this text]
     (str/replace text #"\u001b\[[0-9;]*m" "")))
 
 ;; Constructor functions
-(defn create-color 
-  "Create a new color with the given attributes"
-  ([attributes] (create-color attributes false))
-  ([attributes no-color?]
-   (->Color (vec attributes) no-color?)))
+(defn create-colour 
+  "Create a new colour with the given attributes"
+  ([attributes] (create-colour attributes false))
+  ([attributes no-colour?]
+   (->colour (vec attributes) no-colour?)))
 
 (defn add-attributes
-  "Add attributes to an existing color"
-  [color & attributes]
-  (update color :attributes #(vec (concat % attributes))))
+  "Add attributes to an existing colour"
+  [colour & attributes]
+  (update colour :attributes #(vec (concat % attributes))))
 
-;; Multi-method for color operations
-(defmulti color-operation 
-  "Multi-method for different color operations"
+;; Multi-method for colour operations
+(defmulti colour-operation 
+  "Multi-method for different colour operations"
   (fn [op & _] op))
 
-(defmethod color-operation :combine
-  [_ color1 color2]
-  (create-color 
-    (concat (:attributes color1) (:attributes color2))
-    (or (:no-color? color1) (:no-color? color2))))
+(defmethod colour-operation :combine
+  [_ colour1 colour2]
+  (create-colour 
+    (concat (:attributes colour1) (:attributes colour2))
+    (or (:no-colour? colour1) (:no-colour? colour2))))
 
-(defmethod color-operation :enable
-  [_ color]
-  (assoc color :no-color? false))
+(defmethod colour-operation :enable
+  [_ colour]
+  (assoc colour :no-colour? false))
 
-(defmethod color-operation :disable
-  [_ color]
-  (assoc color :no-color? true))
+(defmethod colour-operation :disable
+  [_ colour]
+  (assoc colour :no-colour? true))
 
-(defmethod color-operation :has-foreground?
-  [_ color]
-  (some attr/fg-color-attributes (:attributes color)))
+(defmethod colour-operation :has-foreground?
+  [_ colour]
+  (some attr/fg-colour-attributes (:attributes colour)))
 
-(defmethod color-operation :has-background?
-  [_ color]
-  (some attr/bg-color-attributes (:attributes color)))
+(defmethod colour-operation :has-background?
+  [_ colour]
+  (some attr/bg-colour-attributes (:attributes colour)))
 
-(defmethod color-operation :has-formatting?
-  [_ color]
-  (some attr/format-attributes (:attributes color)))
+(defmethod colour-operation :has-formatting?
+  [_ colour]
+  (some attr/format-attributes (:attributes colour)))
 ```
 
-#### 4. RGB Color Support (rgb.clj)
+#### 4. RGB colour Support (rgb.clj)
 
 ```clojure
 (ns clojusc.colours.rgb
-  (:require [clojusc.colours.color :as color]
+  (:require [clojusc.colours.colour :as colour]
             [clojusc.colours.ansi :as ansi]))
 
-(defrecord RGBColor [r g b background? no-color?]
+(defrecord RGBcolour [r g b background? no-colour?]
   ansi/ANSIFormattable
   (format-sequence [this]
-    (when (not no-color?)
+    (when (not no-colour?)
       (if background?
         (ansi/make-escape-sequence [(ansi/rgb-background-code r g b)])
         (ansi/make-escape-sequence [(ansi/rgb-foreground-code r g b)]))))
   
   (reset-sequence? [this] false)
   
-  ansi/Colorable
-  (colorize [this text]
-    (if no-color?
+  ansi/colourable
+  (colourize [this text]
+    (if no-colour?
       text
       (str (ansi/format-sequence this) text ansi/reset-sequence)))
   
-  (strip-colors [this text]
+  (strip-colours [this text]
     (str/replace text #"\u001b\[[0-9;]*m" "")))
 
-(defn rgb-color
-  "Create an RGB foreground color"
-  ([r g b] (rgb-color r g b false))
-  ([r g b no-color?]
+(defn rgb-colour
+  "Create an RGB foreground colour"
+  ([r g b] (rgb-colour r g b false))
+  ([r g b no-colour?]
    {:pre [(and (>= r 0) (<= r 255))
           (and (>= g 0) (<= g 255))
           (and (>= b 0) (<= b 255))]}
-   (->RGBColor r g b false no-color?)))
+   (->RGBcolour r g b false no-colour?)))
 
-(defn rgb-bg-color
-  "Create an RGB background color"
-  ([r g b] (rgb-bg-color r g b false))
-  ([r g b no-color?]
+(defn rgb-bg-colour
+  "Create an RGB background colour"
+  ([r g b] (rgb-bg-colour r g b false))
+  ([r g b no-colour?]
    {:pre [(and (>= r 0) (<= r 255))
           (and (>= g 0) (<= g 255))
           (and (>= b 0) (<= b 255))]}
-   (->RGBColor r g b true no-color?)))
+   (->RGBcolour r g b true no-colour?)))
 
 (defn add-rgb
-  "Add RGB foreground color to existing color"
-  [color r g b]
-  (color/color-operation :combine color (rgb-color r g b)))
+  "Add RGB foreground colour to existing colour"
+  [colour r g b]
+  (colour/colour-operation :combine colour (rgb-colour r g b)))
 
 (defn add-rgb-bg
-  "Add RGB background color to existing color"
-  [color r g b]
-  (color/color-operation :combine color (rgb-bg-color r g b)))
+  "Add RGB background colour to existing colour"
+  [colour r g b]
+  (colour/colour-operation :combine colour (rgb-bg-colour r g b)))
 ```
 
 #### 5. Print Functions (print.clj)
@@ -287,99 +287,99 @@ colours/
   (:require [clojusc.colours.ansi :as ansi]
             [clojure.java.io :as io]))
 
-(def ^:dynamic *no-color* 
-  "Global color disable flag"
-  (not (nil? (System/getenv "NO_COLOR"))))
+(def ^:dynamic *no-colour* 
+  "Global colour disable flag"
+  (not (nil? (System/getenv "NO_colour"))))
 
 (def ^:dynamic *output-writer* 
-  "Default output writer for colored text"
+  "Default output writer for coloured text"
   *out*)
 
-(defprotocol ColorPrinter
-  "Protocol for color printing operations"
-  (print-colored [this writer text] "Print colored text to writer")
-  (format-colored [this format-str & args] "Format and colorize text"))
+(defprotocol ColourPrinter
+  "Protocol for colour printing operations"
+  (print-coloured [this writer text] "Print coloured text to writer")
+  (format-coloured [this format-str & args] "Format and colourize text"))
 
-(defn- should-disable-color? [colorable]
-  (or *no-color* 
-      (and (satisfies? ansi/Colorable colorable)
-           (get colorable :no-color?))))
+(defn- should-disable-colour? [colourable]
+  (or *no-colour* 
+      (and (satisfies? ansi/colourable colourable)
+           (get colourable :no-colour?))))
 
-(extend-protocol ColorPrinter
+(extend-protocol ColourPrinter
   Object
-  (print-colored [color writer text]
-    (if (should-disable-color? color)
+  (print-coloured [colour writer text]
+    (if (should-disable-colour? colour)
       (.write writer text)
-      (.write writer (ansi/colorize color text))))
+      (.write writer (ansi/colourize colour text))))
   
-  (format-colored [color format-str & args]
+  (format-coloured [colour format-str & args]
     (let [formatted (apply format format-str args)]
-      (if (should-disable-color? color)
+      (if (should-disable-colour? colour)
         formatted
-        (ansi/colorize color formatted)))))
+        (ansi/colourize colour formatted)))))
 
 ;; High-level printing functions
-(defn print-with-color
-  "Print text with color to *output-writer*"
-  ([color text]
-   (print-with-color color *output-writer* text))
-  ([color writer text]
-   (print-colored color writer text)
+(defn print-with-colour
+  "Print text with colour to *output-writer*"
+  ([colour text]
+   (print-with-colour colour *output-writer* text))
+  ([colour writer text]
+   (print-coloured colour writer text)
    (.flush writer)))
 
-(defn println-with-color
-  "Print text with color and newline"
-  ([color text]
-   (println-with-color color *output-writer* text))
-  ([color writer text]
-   (print-colored color writer (str text \newline))
+(defn println-with-colour
+  "Print text with colour and newline"
+  ([colour text]
+   (println-with-colour colour *output-writer* text))
+  ([colour writer text]
+   (print-coloured colour writer (str text \newline))
    (.flush writer)))
 
-(defn printf-with-color
-  "Printf with color formatting"
-  ([color format-str & args]
-   (printf-with-color color *output-writer* format-str args))
-  ([color writer format-str & args]
-   (let [formatted (format-colored color format-str args)]
+(defn printf-with-colour
+  "Printf with colour formatting"
+  ([colour format-str & args]
+   (printf-with-colour colour *output-writer* format-str args))
+  ([colour writer format-str & args]
+   (let [formatted (format-coloured colour format-str args)]
      (.write writer formatted)
      (.flush writer))))
 
 ;; Function generators (like Go's PrintfFunc)
 (defn make-print-fn
-  "Create a print function with pre-configured color"
-  [color]
-  (fn [text] (print-with-color color text)))
+  "Create a print function with pre-configured colour"
+  [colour]
+  (fn [text] (print-with-colour colour text)))
 
 (defn make-println-fn
-  "Create a println function with pre-configured color"
-  [color]
-  (fn [text] (println-with-color color text)))
+  "Create a println function with pre-configured colour"
+  [colour]
+  (fn [text] (println-with-colour colour text)))
 
 (defn make-printf-fn
-  "Create a printf function with pre-configured color"
-  [color]
+  "Create a printf function with pre-configured colour"
+  [colour]
   (fn [format-str & args]
-    (apply printf-with-color color format-str args)))
+    (apply printf-with-colour colour format-str args)))
 
 (defn make-format-fn
-  "Create a string formatting function with pre-configured color"
-  [color]
+  "Create a string formatting function with pre-configured colour"
+  [colour]
   (fn [format-str & args]
-    (apply format-colored color format-str args)))
+    (apply format-coloured colour format-str args)))
 ```
 
 #### 6. Core Public API (core.clj)
 
 ```clojure
 (ns clojusc.colours.core
-  "Main public API for the Clojure color library"
+  "Main public API for the Clojure colour library"
   (:require [clojusc.colours.attributes :as attr]
-            [clojusc.colours.color :as color]
+            [clojusc.colours.colour :as colour]
             [clojusc.colours.rgb :as rgb]
             [clojusc.colours.print :as print]
             [clojusc.colours.ansi :as ansi])
-  (:import [clj_color.color Color]
-           [clj_color.rgb RGBColor]))
+  (:import [clj_colour.colour colour]
+           [clj_colour.rgb RGBcolour]))
 
 ;; Re-export commonly used attributes
 (def bold attr/bold)
@@ -397,158 +397,158 @@ colours/
 (def bg-green attr/bg-green)
 (def bg-blue attr/bg-blue)
 
-;; Color creation
-(defn color
-  "Create a new color with the given attributes"
+;; Colour creation
+(defn colour
+  "Create a new colour with the given attributes"
   [& attributes]
-  (color/create-color attributes))
+  (colour/create-colour attributes))
 
 (defn rgb
-  "Create RGB foreground color"
+  "Create RGB foreground colour"
   [r g b]
-  (rgb/rgb-color r g b))
+  (rgb/rgb-colour r g b))
 
 (defn rgb-bg
-  "Create RGB background color"
+  "Create RGB background colour"
   [r g b]
-  (rgb/rgb-bg-color r g b))
+  (rgb/rgb-bg-colour r g b))
 
-;; Color manipulation
+;; Colour manipulation
 (defn add
-  "Add attributes to a color"
-  [color & attributes]
-  (apply color/add-attributes color attributes))
+  "Add attributes to a colour"
+  [colour & attributes]
+  (apply colour/add-attributes colour attributes))
 
 (defn combine
-  "Combine two colors"
-  [color1 color2]
-  (color/color-operation :combine color1 color2))
+  "Combine two colours"
+  [colour1 colour2]
+  (colour/colour-operation :combine colour1 colour2))
 
-(defn enable-color
-  "Enable color output for a color"
-  [color]
-  (color/color-operation :enable color))
+(defn enable-colour
+  "Enable colour output for a colour"
+  [colour]
+  (colour/colour-operation :enable colour))
 
-(defn disable-color
-  "Disable color output for a color"
-  [color]
-  (color/color-operation :disable color))
+(defn disable-colour
+  "Disable colour output for a colour"
+  [colour]
+  (colour/colour-operation :disable colour))
 
 ;; String operations
-(defn colorize
-  "Apply color to text string"
-  [color text]
-  (ansi/colorize color text))
+(defn colourize
+  "Apply colour to text string"
+  [colour text]
+  (ansi/colourize colour text))
 
-(defn strip-colors
-  "Remove ANSI color codes from text"
+(defn strip-colours
+  "Remove ANSI colour codes from text"
   [text]
-  (ansi/strip-colors (color/create-color []) text))
+  (ansi/strip-colours (colour/create-colour []) text))
 
 ;; Printing functions
-(defn print-color
-  "Print colored text"
-  [color text]
-  (print/print-with-color color text))
+(defn print-colour
+  "Print coloured text"
+  [colour text]
+  (print/print-with-colour colour text))
 
-(defn println-color
-  "Print colored text with newline"
-  [color text]
-  (print/println-with-color color text))
+(defn println-colour
+  "Print coloured text with newline"
+  [colour text]
+  (print/println-with-colour colour text))
 
-(defn printf-color
-  "Printf with color"
-  [color format-str & args]
-  (apply print/printf-with-color color format-str args))
+(defn printf-colour
+  "Printf with colour"
+  [colour format-str & args]
+  (apply print/printf-with-colour colour format-str args))
 
-;; Convenient color functions (like Go's color.Red(), color.Green(), etc.)
-(defmacro defcolor
-  "Define a convenient color function"
+;; Convenient colour functions (like Go's colour.Red(), colour.Green(), etc.)
+(defmacro defcolour
+  "Define a convenient colour function"
   [name attr]
   `(defn ~name
      ([text#] (~name "%s" text#))
      ([format-str# & args#]
-      (let [color# (color/create-color [~attr])]
-        (apply print/printf-with-color color# (str format-str# "\\n") args#)))))
+      (let [colour# (colour/create-colour [~attr])]
+        (apply print/printf-with-colour colour# (str format-str# "\\n") args#)))))
 
-(defcolor red attr/fg-red)
-(defcolor green attr/fg-green)
-(defcolor blue attr/fg-blue)
-(defcolor yellow attr/fg-yellow)
-(defcolor cyan attr/fg-cyan)
-(defcolor magenta attr/fg-magenta)
-(defcolor white attr/fg-white)
-(defcolor black attr/fg-black)
+(defcolour red attr/fg-red)
+(defcolour green attr/fg-green)
+(defcolour blue attr/fg-blue)
+(defcolour yellow attr/fg-yellow)
+(defcolour cyan attr/fg-cyan)
+(defcolour magenta attr/fg-magenta)
+(defcolour white attr/fg-white)
+(defcolour black attr/fg-black)
 
-;; String formatting functions (like Go's color.RedString())
-(defmacro defcolor-string
-  "Define a color string function"
+;; String formatting functions (like Go's colour.RedString())
+(defmacro defcolour-string
+  "Define a colour string function"
   [name attr]
   `(defn ~(symbol (str name "-string"))
      ([text#] (~(symbol (str name "-string")) "%s" text#))
      ([format-str# & args#]
-      (let [color# (color/create-color [~attr])]
-        (apply print/format-colored color# format-str# args#)))))
+      (let [colour# (colour/create-colour [~attr])]
+        (apply print/format-coloured colour# format-str# args#)))))
 
-(defcolor-string red attr/fg-red)
-(defcolor-string green attr/fg-green)
-(defcolor-string blue attr/fg-blue)
-(defcolor-string yellow attr/fg-yellow)
-(defcolor-string cyan attr/fg-cyan)
-(defcolor-string magenta attr/fg-magenta)
-(defcolor-string white attr/fg-white)
-(defcolor-string black attr/fg-black)
+(defcolour-string red attr/fg-red)
+(defcolour-string green attr/fg-green)
+(defcolour-string blue attr/fg-blue)
+(defcolour-string yellow attr/fg-yellow)
+(defcolour-string cyan attr/fg-cyan)
+(defcolour-string magenta attr/fg-magenta)
+(defcolour-string white attr/fg-white)
+(defcolour-string black attr/fg-black)
 
-;; Global color control
-(defn set-no-color!
-  "Globally disable color output"
+;; Global colour control
+(defn set-no-colour!
+  "Globally disable colour output"
   [disabled?]
-  (alter-var-root #'print/*no-color* (constantly disabled?)))
+  (alter-var-root #'print/*no-colour* (constantly disabled?)))
 
-(defn no-color?
-  "Check if color output is globally disabled"
+(defn no-colour?
+  "Check if colour output is globally disabled"
   []
-  print/*no-color*)
+  print/*no-colour*)
 
-;; High-intensity color variants
-(def hi-red (color/create-color [attr/fg-hi-red]))
-(def hi-green (color/create-color [attr/fg-hi-green]))
-(def hi-blue (color/create-color [attr/fg-hi-blue]))
-(def hi-yellow (color/create-color [attr/fg-hi-yellow]))
-(def hi-cyan (color/create-color [attr/fg-hi-cyan]))
-(def hi-magenta (color/create-color [attr/fg-hi-magenta]))
-(def hi-white (color/create-color [attr/fg-hi-white]))
-(def hi-black (color/create-color [attr/fg-hi-black]))
+;; High-intensity colour variants
+(def hi-red (colour/create-colour [attr/fg-hi-red]))
+(def hi-green (colour/create-colour [attr/fg-hi-green]))
+(def hi-blue (colour/create-colour [attr/fg-hi-blue]))
+(def hi-yellow (colour/create-colour [attr/fg-hi-yellow]))
+(def hi-cyan (colour/create-colour [attr/fg-hi-cyan]))
+(def hi-magenta (colour/create-colour [attr/fg-hi-magenta]))
+(def hi-white (colour/create-colour [attr/fg-hi-white]))
+(def hi-black (colour/create-colour [attr/fg-hi-black]))
 ```
 
 ## Implementation Details
 
 ### 1. Clojure Best Practices Applied
 
-- **Immutable Data Structures**: Colors are immutable records that return new instances when modified
-- **Protocols**: Define clear interfaces for ANSI formatting and color operations
-- **Multi-methods**: Used for extensible color operations based on dispatch values
+- **Immutable Data Structures**: colours are immutable records that return new instances when modified
+- **Protocols**: Define clear interfaces for ANSI formatting and colour operations
+- **Multi-methods**: Used for extensible colour operations based on dispatch values
 - **Namespaced Organization**: Logical separation of concerns across namespaces
-- **Dynamic Variables**: For global configuration like `*no-color*` and `*output-writer*`
+- **Dynamic Variables**: For global configuration like `*no-colour*` and `*output-writer*`
 - **Pre/Post Conditions**: Input validation for RGB values
 - **Destructuring**: Used throughout for clean parameter handling
 
 ### 2. Protocol Usage
 
 - **ANSIFormattable**: For objects that can generate ANSI escape sequences
-- **Colorable**: For applying and stripping colors from text
-- **ColorPrinter**: For consistent printing behavior across different color types
+- **colourable**: For applying and stripping colours from text
+- **ColourPrinter**: For consistent printing behavior across different colour types
 
 ### 3. Multi-method Usage
 
-- **color-operation**: Extensible operations on colors (combine, enable, disable, etc.)
-- Allows for easy extension with new color operations without modifying existing code
+- **colour-operation**: Extensible operations on colours (combine, enable, disable, etc.)
+- Allows for easy extension with new colour operations without modifying existing code
 
 ### 4. Key Features
 
-#### Immutable Color Composition
+#### Immutable colour Composition
 ```clojure
-(def red-bold (-> (color fg-red)
+(def red-bold (-> (colour fg-red)
                   (add bold)))
 
 (def red-bold-underline (add red-bold underline))
@@ -562,8 +562,8 @@ colours/
 
 #### Flexible Printing API
 ```clojure
-(println-color (color fg-red bold) "Error message")
-(printf-color (color fg-green) "Success: %d items processed" 42)
+(println-colour (colour fg-red bold) "Error message")
+(printf-colour (colour fg-green) "Success: %d items processed" 42)
 
 ;; Or use convenience functions
 (red "Error: %s" error-msg)
@@ -572,98 +572,98 @@ colours/
 
 #### Function Generation
 ```clojure
-(def error-printer (make-println-fn (color fg-red bold)))
-(def success-formatter (make-format-fn (color fg-green)))
+(def error-printer (make-println-fn (colour fg-red bold)))
+(def success-formatter (make-format-fn (colour fg-green)))
 
 (error-printer "Something went wrong!")
 ```
 
 ### 5. Configuration and Environment
 
-- Respects `NO_COLOR` environment variable
-- Global color disable with `set-no-color!`
-- Per-color disable with `disable-color`
+- Respects `NO_colour` environment variable
+- Global colour disable with `set-no-colour!`
+- Per-colour disable with `disable-colour`
 - Configurable output writer
 
 ### 6. Cross-platform Considerations
 
 - Uses standard ANSI escape sequences
-- Handles color stripping for non-terminal outputs
-- Environment variable detection for color support
+- Handles colour stripping for non-terminal outputs
+- Environment variable detection for colour support
 
 ## Testing Strategy
 
 ### Unit Tests
-- Test all color attributes and combinations
+- Test all colour attributes and combinations
 - Validate ANSI escape sequence generation
-- Test RGB color creation and validation
+- Test RGB colour creation and validation
 - Verify print function behavior with mocked writers
 
 ### Integration Tests
-- Test complete color workflows
+- Test complete colour workflows
 - Verify environment variable handling
 - Test protocol implementations across different types
 
 ### Property-based Tests
 - Use `test.check` for RGB value validation
-- Test color combination properties
+- Test colour combination properties
 - Verify ANSI sequence correctness
 
 ## Usage Examples
 
 ### Basic Usage
 ```clojure
-(require '[clojusc.colours.core :as color])
+(require '[clojusc.colours.core :as colour])
 
-;; Simple colored output
-(color/red "This is red text")
-(color/green "Success: %d files processed" 42)
+;; Simple coloured output
+(colour/red "This is red text")
+(colour/green "Success: %d files processed" 42)
 
-;; Create custom colors
-(def warning-style (color/color color/fg-yellow color/bold))
-(color/println-color warning-style "Warning message")
+;; Create custom colours
+(def warning-style (colour/colour colour/fg-yellow colour/bold))
+(colour/println-colour warning-style "Warning message")
 
-;; RGB colors
-(def orange (color/rgb 255 128 0))
-(color/print-color orange "Orange text")
+;; RGB colours
+(def orange (colour/rgb 255 128 0))
+(colour/print-colour orange "Orange text")
 
-;; Combine colors and styles
-(def error-style (-> (color/color color/fg-red)
-                     (color/add color/bold color/underline)))
+;; Combine colours and styles
+(def error-style (-> (colour/colour colour/fg-red)
+                     (colour/add colour/bold colour/underline)))
 ```
 
 ### Advanced Usage
 ```clojure
 ;; Function generation
-(def log-error (color/make-println-fn 
-                (color/color color/fg-red color/bold)))
-(def log-info (color/make-println-fn 
-               (color/color color/fg-blue)))
+(def log-error (colour/make-println-fn 
+                (colour/colour colour/fg-red colour/bold)))
+(def log-info (colour/make-println-fn 
+               (colour/colour colour/fg-blue)))
 
 (log-error "Critical error occurred!")
 (log-info "Processing complete")
 
 ;; String formatting
-(println "Status:" (color/green-string "OK") 
-         "Errors:" (color/red-string "%d" error-count))
+(println "Status:" (colour/green-string "OK") 
+         "Errors:" (colour/red-string "%d" error-count))
 
-;; Disable colors conditionally
+;; Disable colours conditionally
 (when (some-condition?)
-  (color/set-no-color! true))
+  (colour/set-no-colour! true))
 ```
 
 ## Migration Guide
 
-### From Go fatih/color to clojusc.colours
+### From Go fatih/colour to clojusc.colours
 
 | Go Code | Clojure Equivalent |
 |---------|-------------------|
-| `color.Red("text")` | `(color/red "text")` |
-| `color.New(color.FgRed, color.Bold)` | `(color/color color/fg-red color/bold)` |
-| `c.Add(color.Underline)` | `(color/add c color/underline)` |
-| `color.RGB(255, 0, 0)` | `(color/rgb 255 0 0)` |
-| `c.PrintfFunc()` | `(color/make-printf-fn c)` |
-| `color.NoColor = true` | `(color/set-no-color! true)` |
+| `colour.Red("text")` | `(colour/red "text")` |
+| `colour.New(colour.FgRed, colour.Bold)` | `(colour/colour colour/fg-red colour/bold)` |
+| `c.Add(colour.Underline)` | `(colour/add c colour/underline)` |
+| `colour.RGB(255, 0, 0)` | `(colour/rgb 255 0 0)` |
+| `c.PrintfFunc()` | `(colour/make-printf-fn c)` |
+| `colour.NoColour = true` | `(colour/set-no-colour! true)` |
 
 ## Dependencies
 
@@ -677,15 +677,15 @@ Add to `deps.edn`:
 
 - Use of records for efficient attribute storage
 - Lazy sequence generation for ANSI codes
-- Efficient string concatenation for color formatting
-- Memoization opportunities for frequently used colors
+- Efficient string concatenation for colour formatting
+- Memoization opportunities for frequently used colours
 
 ## Future Enhancements
 
-1. **Color Themes**: Support for named color themes
-2. **Terminal Detection**: Auto-disable colors for non-TTY outputs  
-3. **256-Color Support**: Extended color palette beyond RGB
-4. **Color Interpolation**: Generate color gradients
+1. **Colour Themes**: Support for named colour themes
+2. **Terminal Detection**: Auto-disable colours for non-TTY outputs  
+3. **256-colour Support**: Extended colour palette beyond RGB
+4. **Colour Interpolation**: Generate colour gradients
 5. **Styled Component**: Higher-level styling abstractions
 
-This implementation plan provides a comprehensive, idiomatic Clojure translation of the Go fatih/color library while leveraging Clojure's strengths in immutability, protocols, and functional composition.
+This implementation plan provides a comprehensive, idiomatic Clojure translation of the Go fatih/colour library while leveraging Clojure's strengths in immutability, protocols, and functional composition.

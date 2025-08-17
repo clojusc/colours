@@ -1,9 +1,10 @@
 (ns build
   (:refer-clojure :exclude [test])
   (:require [clojure.tools.deps :as t]
-            [clojure.tools.build.api :as b]))
+            [clojure.tools.build.api :as b]
+            [deps-deploy.deps-deploy :as dd]))
 
-(def lib 'net.clojars.clojusc/colours)
+(def lib 'com.github.clojusc/colours)
 (def version "0.1.0-SNAPSHOT")
 (def main 'clojusc.colours)
 (def class-dir "target/classes")
@@ -22,22 +23,45 @@
   opts)
 
 (defn- uber-opts [opts]
-  (assoc opts
-         :lib lib :main main
-         :uber-file (format "target/%s-%s.jar" lib version)
-         :basis (b/create-basis {})
-         :class-dir class-dir
-         :src-dirs ["src"]
-         :ns-compile [main]))
+  (let [jar-file (format "target/%s-%s.jar" lib version)]
+    (assoc opts
+           :lib lib :main main :version version
+           :uber-file jar-file
+           :jar-file jar-file
+           :basis (b/create-basis {})
+           :class-dir class-dir
+           :src-dirs ["src"]
+           :ns-compile [main])))
 
-(defn ci "Run the CI pipeline of tests (and build the uberjar)." [opts]
-  (test opts)
+(defn clean "Clean the build directory." [opts]
   (b/delete {:path "target"})
+  (b/delete {:path "pom.xml"})
+  opts)
+
+(defn build "Run the CI pipeline of tests (and build the JAR)." [opts]
+  (clean opts)
   (let [opts (uber-opts opts)]
+    (println "\nWriting pom.xml...")
+    (b/write-pom opts)
     (println "\nCopying source...")
     (b/copy-dir {:src-dirs ["resources" "src"] :target-dir class-dir})
-    (println (str "\nCompiling " main "..."))
-    (b/compile-clj opts)
     (println "\nBuilding JAR...")
-    (b/uber opts))
+    (b/jar opts))
+  opts)
+
+(defn ci "Run the CI pipeline of tests (and build the JAR)." [opts]
+  (clean opts)
+  (test opts)
+  (build opts)
+  opts)
+
+(defn install "Install the JAR locally." [opts]
+  (let [opts (uber-opts opts)]
+    (b/install opts))
+  opts)
+
+(defn deploy "Deploy the JAR to Clojars." [opts]
+  (let [{:keys [jar-file] :as opts} (uber-opts opts)]
+    (dd/deploy {:installer :remote :artifact (b/resolve-path jar-file)
+                :pom-file (b/pom-path (select-keys opts [:lib :class-dir]))}))
   opts)
