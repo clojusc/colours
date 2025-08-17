@@ -57,7 +57,7 @@ The demo runs example code like the following:
 
 ## License
 
-Copyright © 2025 Clojusc
+Copyright © 2025 Clojure-Aided Enrichment Center
 
 Apache License, Version 2.0
 
