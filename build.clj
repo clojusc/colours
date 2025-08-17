@@ -4,7 +4,7 @@
             [clojure.tools.build.api :as b]
             [deps-deploy.deps-deploy :as dd]))
 
-(def lib 'clojusc/colours)
+(def lib 'com.github.clojusc/colours)
 (def version "0.1.0")
 (def main 'clojusc.colours)
 (def class-dir "target/classes")
@@ -22,16 +22,36 @@
     (when-not (zero? exit) (throw (ex-info "Tests failed" {}))))
   opts)
 
+(defn- pom-template [version]
+  [[:description "Another ANSI colour library for Clojure"]
+   [:url "https://github.com/clojusc/colours"]
+   [:licenses
+    [:license
+     [:name "Apache License 2.0"]
+     [:distribution "repo"]
+     [:url "http://www.apache.org/licenses/LICENSE-2.0"]]]
+   [:developers
+    [:developer
+     [:name "oubiwann"]]]
+   [:scm
+    [:url "https://github.com/clojusc/colours"]
+    [:connection "scm:git:https://github.com/clojusc/colours.git"]
+    [:developerConnection "scm:git:ssh:git@github.com:clojusc/colours.git"]
+    [:tag (str "v" version)]]])
+
 (defn- uber-opts [opts]
   (let [jar-file (format "target/%s-%s.jar" lib version)]
     (assoc opts
-           :lib lib :main main :version version
+           :lib lib
+           :main main
+           :version version
            :uber-file jar-file
            :jar-file jar-file
            :basis (b/create-basis {})
            :class-dir class-dir
            :src-dirs ["src"]
-           :ns-compile [main])))
+           :ns-compile [main]
+           :pom-data  (pom-template version)))
 
 (defn clean "Clean the build directory." [opts]
   (b/delete {:path "target"})
