@@ -60,7 +60,7 @@ jobs:
       run: clojure -P -X:test
 
     - name: Run tests
-      run: clojure -X:test
+      run: clojure -M:test
 
     - name: Run demo
       run: clojure -X:run-x
@@ -75,7 +75,7 @@ jobs:
 
     - name: Generate test report
       if: matrix.os == 'ubuntu-latest' && matrix.java == '17' && matrix.clojure == '1.11.1'
-      run: clojure -X:test :reporter :junit :output-file target/test-results.xml
+      run: clojure -M:test --reporter junit --output-file target/test-results.xml
 
     - name: Upload test results
       if: matrix.os == 'ubuntu-latest' && matrix.java == '17' && matrix.clojure == '1.11.1'
