@@ -51,7 +51,7 @@
            :class-dir class-dir
            :src-dirs ["src"]
            :ns-compile [main]
-           :pom-data  (pom-template version)))
+           :pom-data  (pom-template version))))
 
 (defn clean "Clean the build directory." [opts]
   (b/delete {:path "target"})
