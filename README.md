@@ -11,7 +11,7 @@
 `deps.edn`:
 
 ```clojure
-{:deps {clojusc/colours {:mvn/version "0.1.0"}}}
+{:deps {com.github.clojusc/colours {:mvn/version "0.1.0"}}}
 ```
 
 A lein `project.clj` file:
@@ -19,7 +19,7 @@ A lein `project.clj` file:
 
 ```clojure
 (defproject my-project "1.0.0"
-  :dependencies [[clojusc/colours "0.1.0"]])
+  :dependencies [[com.github.clojusc/colours "0.1.0"]])
 ```
 
 ## Demo
@@ -34,20 +34,25 @@ Run the project's demo directly, via `:exec-fn`:
 The demo runs example code like the following:
 
 ```clojure
-  (colours/print (colours/colour attr/fg-green attr/bold) "Hello, ")
-  (colours/print (colours/colour attr/fg-cyan) "World")
-  (colours/println (colours/colour attr/fg-green attr/bold) "!\n")
+(ns clojusc.colours
+  (:require [clojusc.colours.core :as c]
+            [clojusc.colours.attr :as attr]))
+  
+(defn my-fun []
+  (c/print (c/colour attr/fg-green attr/bold) "Hello, ")
+  (c/print (c/colour attr/fg-cyan) "World")
+  (c/println (c/colour attr/fg-green attr/bold) "!\n")
 
-  (colours/red "This is red text\n")
-  (colours/green "This is green text\n")
-  (colours/blue "This is blue text\n")
-  (colours/println (colours/colour attr/fg-yellow attr/bold) "Bold yellow text")
+  (c/red "This is red text\n")
+  (c/green "This is green text\n")
+  (c/blue "This is blue text\n")
+  (c/println (c/colour attr/fg-yellow attr/bold) "Bold yellow text")
 
-  (let [orange (colours/rgb 255 128 0)]
-    (colours/println orange "This is orange RGB text"))
+  (let [orange (c/rgb 255 128 0)]
+    (c/println orange "This is orange RGB text"))
 
   (println "\nString formatting:")
-  (println "Status:" (colours/green-string "SUCCESS") "- Don't worry, be happy!\n"))
+  (println "Status:" (c/green-string "SUCCESS") "- Don't worry, be happy!\n"))
 ```
 
 ## License
