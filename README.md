@@ -1,5 +1,9 @@
 # colours
 
+[![Build Status][gh-actions-badge]][gh-actions]
+
+[![Project Logo][logo]][logo-large]
+
 *Another ANSI colour library for Clojure*
 
 ## Installation
@@ -51,3 +55,10 @@ The demo runs example code like the following:
 Copyright © 2025 Clojusc
 
 Apache License, Version 2.0
+
+[//]: ---Named-Links---
+
+[logo]: https://github.com/clojusc/colours/blob/main/resources/images/logo.jpg?raw=true
+[logo-large]: https://github.com/clojusc/colours/blob/main/resources/images/logo-large.jpg?raw=true
+[gh-actions-badge]: https://github.com/clojusc/colours/workflows/CI%2FCD/badge.svg
+[gh-actions]: https://github.com/clojusc/colours/actions?query=workflow%3ACI%2FCD
