@@ -1,0 +1,27 @@
+(ns clojusc.colours.ansi
+  (:require [clojure.string :as str]))
+
+(def ^:const escape-sequence "\u001b[")
+(def ^:const reset-sequence "\u001b[0m")
+
+(defprotocol ANSIFormattable
+  "Protocol for objects that can be formatted with ANSI escape codes"
+  (format-sequence [this] "Generate ANSI escape sequence")
+  (reset-sequence? [this] "Check if this represents a reset"))
+
+(defprotocol Colorable
+  "Protocol for applying colors to text"
+  (colorize [this text] "Apply color formatting to text")
+  (strip-colors [this text] "Remove color formatting from text"))
+
+(defn- join-codes [codes]
+  (str/join ";" (map str codes)))
+
+(defn make-escape-sequence [codes]
+  (str escape-sequence (join-codes codes) "m"))
+
+(defn rgb-foreground-code [r g b]
+  (format "38;2;%d;%d;%d" r g b))
+
+(defn rgb-background-code [r g b]
+  (format "48;2;%d;%d;%d" r g b))
