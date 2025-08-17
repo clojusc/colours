@@ -98,6 +98,7 @@
 #_{:clj-kondo/ignore [:unresolved-symbol]}
 (defcolour black attr/fg-black)
 
+;; TODO: Deprecate these in favour of defcolour-str
 ;; String formatting functions (like Go's colour.RedString())
 (defmacro defcolour-string
   "Define a colour string function"
@@ -106,6 +107,7 @@
      ([text#] (~(symbol (str name "-string")) "%s" text#))
      ([format-str# & args#]
       (let [colour# (colour/create-colour [~attr])]
+        (println "Warning: defcolour-string is deprecated, use defcolour-str instead.")
         (apply print/format-coloured colour# format-str# args#)))))
 
 (defcolour-string red attr/fg-red)
@@ -116,6 +118,25 @@
 (defcolour-string magenta attr/fg-magenta)
 (defcolour-string white attr/fg-white)
 (defcolour-string black attr/fg-black)
+;; END DEPRECATED of defcolour-string
+
+(defmacro defcolour-str
+  "Define a colour string function"
+  [name attr]
+  `(defn ~(symbol (str "str-" name))
+    ([text#] (~(symbol (str "str-" name)) "%s" text#))
+    ([format-str# & args#]
+      (let [colour# (colour/create-colour [~attr])]
+        (apply print/format-coloured colour# format-str# args#)))))
+
+(defcolour-str red attr/fg-red)
+(defcolour-str green attr/fg-green)
+(defcolour-str blue attr/fg-blue)
+(defcolour-str yellow attr/fg-yellow)
+(defcolour-str cyan attr/fg-cyan)
+(defcolour-str magenta attr/fg-magenta)
+(defcolour-str white attr/fg-white)
+(defcolour-str black attr/fg-black)
 
 ;; Global colour control
 (defn set-no-colour!

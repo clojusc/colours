@@ -52,7 +52,7 @@ The demo runs example code like the following:
     (c/println orange "This is orange RGB text"))
 
   (println "\nString formatting:")
-  (println "Status:" (c/green-string "SUCCESS") "- Don't worry, be happy!\n"))
+  (println "Status:" (c/str-green "SUCCESS") "- Don't worry, be happy!\n"))
 ```
 
 ## License
