@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             [clojusc.colours.print :as print]
             [clojusc.colours.colour :as colour]
-            [clojusc.colours.attributes :as attr]
+            [clojusc.colours.attr :as attr]
             [clojusc.colours.ansi :as ansi]
             [clojure.java.io :as io]))
 

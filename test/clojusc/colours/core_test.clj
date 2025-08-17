@@ -1,15 +1,16 @@
 (ns clojusc.colours.core-test
   (:require [clojure.test :refer :all]
-            [clojusc.colours.core :as colours]))
+            [clojusc.colours.core :as colours]
+            [clojusc.colours.attr :as attr]))
 
 (deftest test-colour-creation
   (testing "Basic colour creation"
-    (let [red-colour (colours/colour colours/fg-red)]
+    (let [red-colour (colours/colour attr/fg-red)]
       (is (= [31] (:attributes red-colour)))
       (is (false? (:no-colour? red-colour)))))
   
   (testing "Multiple attribute colour creation"
-    (let [red-bold (colours/colour colours/fg-red colours/bold)]
+    (let [red-bold (colours/colour attr/fg-red attr/bold)]
       (is (= [31 1] (:attributes red-bold))))))
 
 (deftest test-rgb-colours
@@ -27,19 +28,19 @@
 
 (deftest test-colour-manipulation
   (testing "Adding attributes"
-    (let [red (colours/colour colours/fg-red)
-          red-bold (colours/add red colours/bold)]
+    (let [red (colours/colour attr/fg-red)
+          red-bold (colours/add red attr/bold)]
       (is (= [31 1] (:attributes red-bold)))))
   
   (testing "Combining colours"
-    (let [red (colours/colour colours/fg-red)
-          bold (colours/colour colours/bold)
+    (let [red (colours/colour attr/fg-red)
+          bold (colours/colour attr/bold)
           combined (colours/combine red bold)]
       (is (= [31 1] (:attributes combined))))))
 
 (deftest test-colour-enable-disable
   (testing "Enable/disable colour"
-    (let [red (colours/colour colours/fg-red)
+    (let [red (colours/colour attr/fg-red)
           disabled (colours/disable-colour red)
           enabled (colours/enable-colour disabled)]
       (is (true? (:no-colour? disabled)))
@@ -47,7 +48,7 @@
 
 (deftest test-string-operations
   (testing "Colourize text"
-    (let [red (colours/colour colours/fg-red)
+    (let [red (colours/colour attr/fg-red)
           coloured-text (colours/colourize red "test")]
       (is (.contains coloured-text "\u001b[31m"))
       (is (.contains coloured-text "test"))

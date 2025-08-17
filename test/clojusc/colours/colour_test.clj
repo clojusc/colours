@@ -1,7 +1,7 @@
 (ns clojusc.colours.colour-test
   (:require [clojure.test :refer :all]
             [clojusc.colours.colour :as colour]
-            [clojusc.colours.attributes :as attr]
+            [clojusc.colours.attr :as attr]
             [clojusc.colours.ansi :as ansi]))
 
 (deftest test-colour-record
